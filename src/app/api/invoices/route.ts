@@ -28,6 +28,23 @@ export async function POST(request: Request) {
     const totals = calcTotals(data.items, data.taxRate);
     const number = data.number || (await nextInvoiceNumber(prisma));
 
+    // Resolve the client: use existing clientId, or auto-create from clientName
+    let clientId = data.clientId;
+    if (!clientId && data.clientName) {
+      // Check if a client with this name already exists (case-insensitive)
+      const existing = await prisma.client.findFirst({
+        where: { name: { equals: data.clientName } },
+      });
+      if (existing) {
+        clientId = existing.id;
+      } else {
+        const newClient = await prisma.client.create({
+          data: { name: data.clientName },
+        });
+        clientId = newClient.id;
+      }
+    }
+
     const invoice = await prisma.invoice.create({
       data: {
         number,
@@ -40,7 +57,7 @@ export async function POST(request: Request) {
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,
         total: totals.total,
-        clientId: data.clientId,
+        clientId: clientId!,
         items: {
           create: data.items.map((item) => ({
             description: item.description,

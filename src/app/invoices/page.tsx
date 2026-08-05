@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDate, formatMoney } from "@/lib/invoices";
 import { StatusBadge } from "@/components/StatusBadge";
+import { InvoiceRowActions } from "@/components/InvoiceRowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export default async function InvoicesPage() {
                   <th>Due</th>
                   <th>Status</th>
                   <th>Total</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -57,6 +59,9 @@ export default async function InvoicesPage() {
                       <StatusBadge status={invoice.status} />
                     </td>
                     <td>{formatMoney(invoice.total, invoice.currency)}</td>
+                    <td>
+                      <InvoiceRowActions id={invoice.id} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

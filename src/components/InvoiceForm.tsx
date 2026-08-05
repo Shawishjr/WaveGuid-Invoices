@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/invoices";
 
@@ -49,7 +49,22 @@ function defaultDueDate() {
 
 export function InvoiceForm({ clients, invoice }: InvoiceFormProps) {
   const router = useRouter();
-  const [clientId, setClientId] = useState(invoice?.clientId || clients[0]?.id || "");
+
+  const initialClient = invoice
+    ? clients.find((c) => c.id === invoice.clientId)
+    : undefined;
+  const initialClientName = initialClient
+    ? initialClient.company || initialClient.name
+    : "";
+
+  const [clientName, setClientName] = useState(initialClientName);
+  const [selectedClientId, setSelectedClientId] = useState(
+    invoice?.clientId || ""
+  );
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
   const [status, setStatus] = useState(invoice?.status || "draft");
   const [issueDate, setIssueDate] = useState(toInputDate(invoice?.issueDate));
   const [dueDate, setDueDate] = useState(
@@ -77,6 +92,74 @@ export function InvoiceForm({ clients, invoice }: InvoiceFormProps) {
     };
   }, [items, taxRate]);
 
+  const suggestions = useMemo(() => {
+    if (!clientName.trim()) return [];
+    const query = clientName.toLowerCase().trim();
+    return clients
+      .filter(
+        (c) =>
+          c.name.toLowerCase().includes(query) ||
+          (c.company && c.company.toLowerCase().includes(query))
+      )
+      .slice(0, 6);
+  }, [clientName, clients]);
+
+  const exactMatch = useMemo(() => {
+    if (!clientName.trim()) return null;
+    const query = clientName.toLowerCase().trim();
+    return (
+      clients.find(
+        (c) =>
+          c.name.toLowerCase() === query ||
+          (c.company && c.company.toLowerCase() === query)
+      ) || null
+    );
+  }, [clientName, clients]);
+
+  function handleClientNameChange(value: string) {
+    setClientName(value);
+    setSelectedClientId("");
+    setShowSuggestions(true);
+    setActiveSuggestion(-1);
+  }
+
+  function selectClient(client: Client) {
+    setClientName(client.company || client.name);
+    setSelectedClientId(client.id);
+    setShowSuggestions(false);
+    setActiveSuggestion(-1);
+  }
+
+  function handleClientBlur() {
+    setTimeout(() => {
+      setShowSuggestions(false);
+      if (exactMatch && !selectedClientId) {
+        setSelectedClientId(exactMatch.id);
+      }
+    }, 150);
+  }
+
+  function handleClientKeyDown(e: React.KeyboardEvent) {
+    if (!showSuggestions || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveSuggestion((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveSuggestion((prev) =>
+        prev > 0 ? prev - 1 : suggestions.length - 1
+      );
+    } else if (e.key === "Enter" && activeSuggestion >= 0) {
+      e.preventDefault();
+      selectClient(suggestions[activeSuggestion]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setActiveSuggestion(-1);
+    }
+  }
+
   function updateItem(index: number, patch: Partial<Item>) {
     setItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, ...patch } : item))
@@ -88,8 +171,24 @@ export function InvoiceForm({ clients, invoice }: InvoiceFormProps) {
     setSaving(true);
     setError(null);
 
+    let payloadClientId = selectedClientId;
+    let payloadClientName: string | undefined;
+
+    if (!payloadClientId) {
+      if (exactMatch) {
+        payloadClientId = exactMatch.id;
+      } else if (clientName.trim()) {
+        payloadClientName = clientName.trim();
+      } else {
+        setError("Please enter a client name.");
+        setSaving(false);
+        return;
+      }
+    }
+
     const payload = {
-      clientId,
+      clientId: payloadClientId || undefined,
+      clientName: payloadClientName,
       status,
       issueDate,
       dueDate,
@@ -129,35 +228,61 @@ export function InvoiceForm({ clients, invoice }: InvoiceFormProps) {
     }
   }
 
-  if (clients.length === 0) {
-    return (
-      <div className="panel">
-        <div className="empty">
-          Add a client before creating an invoice.{" "}
-          <a href="/clients">Go to clients →</a>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <form className="form-page" onSubmit={onSubmit}>
       <section className="panel" style={{ padding: 20 }}>
         <div className="form-grid">
           <div className="field">
-            <label htmlFor="clientId">Client</label>
-            <select
-              id="clientId"
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              required
-            >
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.company || client.name}
-                </option>
-              ))}
-            </select>
+            <label htmlFor="clientName">Client</label>
+            <div className="autocomplete">
+              <input
+                id="clientName"
+                type="text"
+                value={clientName}
+                onChange={(e) => handleClientNameChange(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={handleClientBlur}
+                onKeyDown={handleClientKeyDown}
+                placeholder="Type a client name…"
+                required
+                autoComplete="off"
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="autocomplete-list" ref={suggestionsRef}>
+                  {suggestions.map((client, index) => (
+                    <div
+                      key={client.id}
+                      className={`autocomplete-item${
+                        index === activeSuggestion ? " active" : ""
+                      }`}
+                      onMouseDown={() => selectClient(client)}
+                      onMouseEnter={() => setActiveSuggestion(index)}
+                    >
+                      <span className="autocomplete-primary">
+                        {client.company || client.name}
+                      </span>
+                      {client.company && (
+                        <span className="autocomplete-secondary">
+                          {client.name}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {showSuggestions &&
+                suggestions.length === 0 &&
+                clientName.trim() &&
+                !exactMatch && (
+                  <div className="autocomplete-list">
+                    <div className="autocomplete-item new-client-hint">
+                      <span className="autocomplete-primary">
+                        + Create &ldquo;{clientName.trim()}&rdquo; as new client
+                      </span>
+                    </div>
+                  </div>
+                )}
+            </div>
           </div>
           <div className="field">
             <label htmlFor="status">Status</label>

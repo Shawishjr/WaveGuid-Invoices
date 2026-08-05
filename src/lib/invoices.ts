@@ -16,17 +16,23 @@ export const invoiceItemSchema = z.object({
   unitPrice: z.coerce.number().min(0, "Unit price cannot be negative"),
 });
 
-export const invoiceSchema = z.object({
-  clientId: z.string().min(1, "Client is required"),
-  number: z.string().min(1).optional(),
-  status: z.enum(invoiceStatuses).default("draft"),
-  issueDate: z.string().min(1),
-  dueDate: z.string().min(1),
-  currency: z.string().default("USD"),
-  notes: z.string().optional().nullable(),
-  taxRate: z.coerce.number().min(0).default(0),
-  items: z.array(invoiceItemSchema).min(1, "Add at least one line item"),
-});
+export const invoiceSchema = z
+  .object({
+    clientId: z.string().min(1).optional(),
+    clientName: z.string().min(1).optional(),
+    number: z.string().min(1).optional(),
+    status: z.enum(invoiceStatuses).default("draft"),
+    issueDate: z.string().min(1),
+    dueDate: z.string().min(1),
+    currency: z.string().default("USD"),
+    notes: z.string().optional().nullable(),
+    taxRate: z.coerce.number().min(0).default(0),
+    items: z.array(invoiceItemSchema).min(1, "Add at least one line item"),
+  })
+  .refine((data) => data.clientId || data.clientName, {
+    message: "Client is required",
+    path: ["clientName"],
+  });
 
 export const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),

@@ -29,12 +29,39 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+> ### ⚠️ Important: Path with `#` character
+> This project is located under `E:\#Project\...`. The `#` character in the
+> directory path **breaks Next.js's React Server Components module resolution**
+> (the `#` is used as a delimiter in the React Client Manifest, causing errors
+> like `Could not find the module "...global-error.js#" in the React Client
+> Manifest`).
+>
+> **Use the provided batch scripts** instead of `npm run dev` / `npm run build`
+> directly. They map the project to a virtual drive (`W:`) without the `#`
+> character and run from there:
+>
+> | Command | Description |
+> | --- | --- |
+> | `dev.bat` | Start development server (via `W:` virtual drive) |
+> | `build.bat` | Production build (via `W:` virtual drive) |
+>
+> Alternatively, run manually:
+>
+> ```bat
+> subst W: "E:\#Project\WAVE\WaveGuid-Invoices"
+> W:
+> npm run dev
+> subst W: /D
+> ```
+
 ## Scripts
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
+| `dev.bat` | Start development server (recommended — handles `#` path issue) |
+| `build.bat` | Production build (recommended — handles `#` path issue) |
+| `npm run dev` | Start development server (only works from a path without `#`) |
+| `npm run build` | Production build (only works from a path without `#`) |
 | `npm run db:push` | Sync Prisma schema to SQLite |
 | `npm run db:seed` | Seed demo company, clients, invoices |
 

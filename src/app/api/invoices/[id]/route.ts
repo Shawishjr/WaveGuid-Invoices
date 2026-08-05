@@ -39,6 +39,22 @@ export async function PUT(request: Request, { params }: Params) {
     const data = parsed.data;
     const totals = calcTotals(data.items, data.taxRate);
 
+    // Resolve the client: use existing clientId, or auto-create from clientName
+    let clientId = data.clientId;
+    if (!clientId && data.clientName) {
+      const existingClient = await prisma.client.findFirst({
+        where: { name: { equals: data.clientName } },
+      });
+      if (existingClient) {
+        clientId = existingClient.id;
+      } else {
+        const newClient = await prisma.client.create({
+          data: { name: data.clientName },
+        });
+        clientId = newClient.id;
+      }
+    }
+
     await prisma.invoiceItem.deleteMany({ where: { invoiceId: id } });
 
     const invoice = await prisma.invoice.update({
@@ -54,7 +70,7 @@ export async function PUT(request: Request, { params }: Params) {
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,
         total: totals.total,
-        clientId: data.clientId,
+        clientId: clientId!,
         items: {
           create: data.items.map((item) => ({
             description: item.description,
