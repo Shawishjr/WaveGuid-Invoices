@@ -15,7 +15,7 @@ model Client {
   address   String?
   company   String?
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  updatedAt DateTime @updatedAt
   invoices  Invoice[]
 }
 
@@ -56,4 +56,13 @@ model CompanySettings {
   address String?
   website String?
   logoUrl String?
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

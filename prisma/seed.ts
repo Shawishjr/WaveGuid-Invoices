@@ -1,8 +1,19 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Create default user
+  await prisma.user.deleteMany();
+  await prisma.user.create({
+    data: {
+      email: "admin@waveguid.com",
+      name: "Admin User",
+      password: await bcrypt.hash("password123", 10),
+    },
+  });
+
   await prisma.companySettings.deleteMany();
   await prisma.invoiceItem.deleteMany();
   await prisma.invoice.deleteMany();
@@ -134,7 +145,7 @@ async function main() {
     },
   });
 
-  console.log("Seeded WaveGuid Invoices demo data.");
+  console.log("Seeded WaveGuid Invoices demo data, including auth user.");
 }
 
 main()
