@@ -59,10 +59,14 @@ export async function POST(request: Request) {
       name: user.name,
     });
 
+    const isHttps =
+      request.headers.get("x-forwarded-proto") === "https" ||
+      new URL(request.url).protocol === "https:";
+
     const response = NextResponse.redirect(new URL(callbackUrl, base));
     response.cookies.set(SESSION_COOKIE_NAME, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isHttps,
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
       sameSite: "lax",
