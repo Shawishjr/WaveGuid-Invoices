@@ -36,6 +36,7 @@ export async function GET(_request: Request, { params }: Params) {
       taxRate: latest.taxRate,
       subtotal: latest.subtotal,
       taxAmount: latest.taxAmount,
+      vatAmount: latest.vatAmount,
       total: latest.total,
       client: {
         name: latest.client.name,
@@ -69,6 +70,7 @@ export async function GET(_request: Request, { params }: Params) {
       taxRate: SAMPLE_DATA.invoice.taxRate,
       subtotal: Number(SAMPLE_DATA.invoice.subtotal.replace(/[^0-9.-]/g, "")),
       taxAmount: Number(SAMPLE_DATA.invoice.taxAmount.replace(/[^0-9.-]/g, "")),
+      vatAmount: Number(SAMPLE_DATA.invoice.vatAmount?.replace(/[^0-9.-]/g, "") || 0),
       total: Number(SAMPLE_DATA.invoice.total.replace(/[^0-9.-]/g, "")),
       client: {
         name: SAMPLE_DATA.client.name,

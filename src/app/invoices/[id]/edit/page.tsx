@@ -42,6 +42,7 @@ export default async function EditInvoicePage({ params }: Props) {
           currency: invoice.currency,
           notes: invoice.notes,
           taxRate: invoice.taxRate,
+          vatAmount: invoice.vatAmount,
           clientId: invoice.clientId,
           templateId: invoice.templateId,
           items: invoice.items.map((item) => ({

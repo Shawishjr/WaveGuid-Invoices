@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatMoney } from "@/lib/invoices";
+import { formatMoney, roundMoney, VAT_RATE } from "@/lib/invoices";
 
 type Client = {
   id: string;
@@ -34,6 +34,7 @@ type InvoiceFormProps = {
     currency: string;
     notes: string | null;
     taxRate: number;
+    vatAmount?: number;
     clientId: string;
     templateId?: string | null;
     items: Item[];
@@ -80,6 +81,9 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
   );
   const [currency, setCurrency] = useState(invoice?.currency || "USD");
   const [taxRate, setTaxRate] = useState(invoice?.taxRate ?? 0);
+  const [includeVat, setIncludeVat] = useState(
+    invoice?.vatAmount ? invoice.vatAmount > 0 : false
+  );
   const [templateId, setTemplateId] = useState<string>(
     invoice?.templateId || defaultTemplateId || ""
   );
@@ -96,12 +100,14 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
       0
     );
     const taxAmount = (subtotal * Number(taxRate)) / 100;
+    const vatAmount = includeVat ? roundMoney((subtotal * VAT_RATE) / 100) : 0;
     return {
       subtotal,
       taxAmount,
-      total: subtotal + taxAmount,
+      vatAmount,
+      total: subtotal + taxAmount + vatAmount,
     };
-  }, [items, taxRate]);
+  }, [items, taxRate, includeVat]);
 
   const suggestions = useMemo(() => {
     if (!clientName.trim()) return [];
@@ -205,6 +211,7 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
       dueDate,
       currency,
       taxRate: Number(taxRate),
+      includeVat,
       templateId: templateId || null,
       notes,
       number: invoice?.number,
@@ -367,6 +374,17 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
               onChange={(e) => setTaxRate(Number(e.target.value))}
             />
           </div>
+          <div className="field field-vat">
+            <label htmlFor="includeVat" className="vat-label">
+              <input
+                id="includeVat"
+                type="checkbox"
+                checked={includeVat}
+                onChange={(e) => setIncludeVat(e.target.checked)}
+              />
+              Include VAT ({VAT_RATE}%)
+            </label>
+          </div>
           <div className="field full">
             <label htmlFor="notes">Notes</label>
             <textarea
@@ -417,13 +435,17 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
                   <td style={{ width: 100 }}>
                     <input
                       type="number"
-                      min="0.01"
-                      step="0.01"
+                      min="1"
+                      step="1"
+                      inputMode="numeric"
                       required
                       value={item.quantity}
-                      onChange={(e) =>
-                        updateItem(index, { quantity: Number(e.target.value) })
-                      }
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (!isNaN(val) && val >= 1) {
+                          updateItem(index, { quantity: val });
+                        }
+                      }}
                     />
                   </td>
                   <td style={{ width: 140 }}>
@@ -471,8 +493,14 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
               <span>Tax</span>
               <span>{formatMoney(totals.taxAmount, currency)}</span>
             </div>
+            {includeVat && (
+              <div>
+                <span>VAT ({VAT_RATE}%)</span>
+                <span>{formatMoney(totals.vatAmount, currency)}</span>
+              </div>
+            )}
             <div className="grand">
-              <span>Total</span>
+              <span>Grand total</span>
               <span>{formatMoney(totals.total, currency)}</span>
             </div>
           </div>

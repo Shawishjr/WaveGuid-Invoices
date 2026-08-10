@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     const data = parsed.data;
-    const totals = calcTotals(data.items, data.taxRate);
+    const totals = calcTotals(data.items, data.taxRate, data.includeVat);
     const number = data.number || (await nextInvoiceNumber(prisma));
 
     // Resolve the client: use existing clientId, or auto-create from clientName
@@ -56,6 +56,7 @@ export async function POST(request: Request) {
         taxRate: data.taxRate,
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,
+        vatAmount: totals.vatAmount,
         total: totals.total,
         clientId: clientId!,
         templateId: data.templateId || null,

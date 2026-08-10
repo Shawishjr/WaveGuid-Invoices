@@ -1,5 +1,5 @@
 import PDFDocument from "pdfkit";
-import { formatDate, formatMoney } from "./invoices";
+import { formatDate, formatMoney, VAT_RATE } from "./invoices";
 import {
   PAGE_HEIGHT,
   PAGE_MARGIN,
@@ -20,6 +20,7 @@ export type PdfInvoice = {
   taxRate: number;
   subtotal: number;
   taxAmount: number;
+  vatAmount: number;
   total: number;
   client: {
     name: string;
@@ -71,6 +72,7 @@ function buildTemplateData(invoice: PdfInvoice, company: PdfCompany): TemplateDa
       taxRate: invoice.taxRate,
       subtotal: formatMoney(invoice.subtotal, currency),
       taxAmount: formatMoney(invoice.taxAmount, currency),
+      vatAmount: formatMoney(invoice.vatAmount, currency),
       total: formatMoney(invoice.total, currency),
     },
     items: invoice.items.map((item) => ({
@@ -207,9 +209,12 @@ function drawTotals(
 
   row("Subtotal", data.invoice.subtotal, false);
   row(`Tax (${data.invoice.taxRate}%)`, data.invoice.taxAmount, false);
+  if (data.invoice.vatAmount !== formatMoney(0, data.invoice.currency)) {
+    row(`VAT (${VAT_RATE}%)`, data.invoice.vatAmount, false);
+  }
   doc.strokeColor("#e2e8f0").lineWidth(1).moveTo(el.x, y).lineTo(el.x + el.w, y).stroke();
   y += 6;
-  row("Total", data.invoice.total, true);
+  row("Grand total", data.invoice.total, true);
 }
 
 function dataUrlToBuffer(src: string): Buffer {

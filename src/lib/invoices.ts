@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const VAT_RATE = 17;
+
 export const invoiceStatuses = [
   "draft",
   "sent",
@@ -27,6 +29,7 @@ export const invoiceSchema = z
     currency: z.string().default("USD"),
     notes: z.string().optional().nullable(),
     taxRate: z.coerce.number().min(0).default(0),
+    includeVat: z.boolean().default(false),
     templateId: z.string().min(1).optional().nullable(),
     items: z.array(invoiceItemSchema).min(1, "Add at least one line item"),
   })
@@ -48,17 +51,20 @@ export type ClientInput = z.infer<typeof clientSchema>;
 
 export function calcTotals(
   items: { quantity: number; unitPrice: number }[],
-  taxRate: number
+  taxRate: number,
+  includeVat = false
 ) {
   const subtotal = items.reduce(
     (sum, item) => sum + item.quantity * item.unitPrice,
     0
   );
   const taxAmount = (subtotal * taxRate) / 100;
-  const total = subtotal + taxAmount;
+  const vatAmount = includeVat ? roundMoney((subtotal * VAT_RATE) / 100) : 0;
+  const total = subtotal + taxAmount + vatAmount;
   return {
     subtotal: roundMoney(subtotal),
     taxAmount: roundMoney(taxAmount),
+    vatAmount: roundMoney(vatAmount),
     total: roundMoney(total),
   };
 }

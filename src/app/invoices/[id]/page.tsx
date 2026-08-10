@@ -94,6 +94,12 @@ export default async function InvoiceDetailPage({ params }: Props) {
             <span>Tax ({invoice.taxRate}%)</span>
             <span>{formatMoney(invoice.taxAmount, invoice.currency)}</span>
           </div>
+          {invoice.vatAmount > 0 && (
+            <div>
+              <span>VAT (17%)</span>
+              <span>{formatMoney(invoice.vatAmount, invoice.currency)}</span>
+            </div>
+          )}
           <div className="grand">
             <span>Total</span>
             <span>{formatMoney(invoice.total, invoice.currency)}</span>

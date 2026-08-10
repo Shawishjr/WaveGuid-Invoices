@@ -30,6 +30,7 @@ model Invoice {
   taxRate       Float         @default(0)
   subtotal      Float         @default(0)
   taxAmount     Float         @default(0)
+  vatAmount     Float         @default(0)
   total         Float         @default(0)
   clientId      String
   client        Client        @relation(fields: [clientId], references: [id])

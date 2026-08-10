@@ -37,7 +37,7 @@ export async function PUT(request: Request, { params }: Params) {
     }
 
     const data = parsed.data;
-    const totals = calcTotals(data.items, data.taxRate);
+    const totals = calcTotals(data.items, data.taxRate, data.includeVat);
 
     // Resolve the client: use existing clientId, or auto-create from clientName
     let clientId = data.clientId;
@@ -69,6 +69,7 @@ export async function PUT(request: Request, { params }: Params) {
         taxRate: data.taxRate,
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,
+        vatAmount: totals.vatAmount,
         total: totals.total,
         clientId: clientId!,
         templateId: data.templateId || null,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatDate, formatMoney } from "./invoices";
+import { formatDate, formatMoney, VAT_RATE } from "./invoices";
 
 export const PAGE_WIDTH = 595; // A4 in points (595.28)
 export const PAGE_HEIGHT = 842; // A4 in points (841.89)
@@ -90,6 +90,7 @@ export type TemplateData = {
     taxRate: number;
     subtotal: string;
     taxAmount: string;
+    vatAmount: string;
     total: string;
   };
   items: {
@@ -126,6 +127,7 @@ export const SAMPLE_DATA: TemplateData = {
     taxRate: 8.5,
     subtotal: formatMoney(6960, "USD"),
     taxAmount: formatMoney(591.6, "USD"),
+    vatAmount: formatMoney(0, "USD"),
     total: formatMoney(7551.6, "USD"),
   },
   items: [
@@ -306,5 +308,6 @@ export const PLACEHOLDER_HINTS: { token: string; label: string }[] = [
   { token: "{{invoice.subtotal}}", label: "Subtotal" },
   { token: "{{invoice.taxRate}}", label: "Tax rate" },
   { token: "{{invoice.taxAmount}}", label: "Tax amount" },
+  { token: "{{invoice.vatAmount}}", label: "VAT amount" },
   { token: "{{invoice.total}}", label: "Total" },
 ];

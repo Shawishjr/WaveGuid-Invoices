@@ -726,12 +726,40 @@ tr:hover td {
   resize: vertical;
 }
 
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-  outline: 2px solid var(--accent-soft);
-  border-color: var(--accent);
-}
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: 2px solid var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  /* VAT toggle — aligned with the field sitting on the left of the same row */
+  .field-vat {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .field-vat .vat-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--ink);
+  }
+
+  .field-vat .vat-label input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface-2);
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
 
 .items-table input {
   width: 100%;
