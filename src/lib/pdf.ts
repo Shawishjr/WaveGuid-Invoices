@@ -1,92 +1,13 @@
-import PDFDocument from "pdfkit";
-import fs from "fs";
-import path from "path";
-import { convertArabic } from "arabic-reshaper";
+import puppeteer, { type Browser } from "puppeteer";
 import { formatDate, formatMoney, VAT_RATE } from "./invoices";
 import {
   PAGE_HEIGHT,
-  PAGE_MARGIN,
   PAGE_WIDTH,
   TemplateElement,
   resolvePlaceholders,
   defaultElements,
   TemplateData,
 } from "./templates";
-
-// ---- Arabic support -------------------------------------------------------
-// PDFKit's built-in fonts are Latin-only, so Arabic glyphs render as tofu.
-// We register an Arabic-capable TTF (Tahoma on Windows / Noto on Linux),
-// reshape Arabic into connected presentation forms, and reverse for RTL.
-const ARABIC_RE =
-  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
-
-function hasArabic(text: string): boolean {
-  return ARABIC_RE.test(text);
-}
-
-function resolveArabicFont(weight: "regular" | "bold"): string | null {
-  const windir = process.env.WINDIR || "C:\\Windows";
-  const candidates =
-    weight === "bold"
-      ? [
-          path.join(windir, "Fonts", "tahomabd.ttf"),
-          path.join(windir, "Fonts", "arialbd.ttf"),
-          path.join(windir, "Fonts", "arial.ttf"),
-          "/usr/share/fonts/truetype/noto/NotoSansArabic-Bold.ttf",
-          "/usr/share/fonts/noto/NotoNaskhArabic-Bold.ttf",
-        ]
-      : [
-          path.join(windir, "Fonts", "tahoma.ttf"),
-          path.join(windir, "Fonts", "arial.ttf"),
-          "/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf",
-          "/usr/share/fonts/noto/NotoNaskhArabic-Regular.ttf",
-        ];
-  for (const c of candidates) {
-    try {
-      if (fs.existsSync(c)) return c;
-    } catch {
-      /* ignore */
-    }
-  }
-  return null;
-}
-
-const ARABIC_REGULAR = resolveArabicFont("regular");
-const ARABIC_BOLD = resolveArabicFont("bold") || ARABIC_REGULAR;
-const ARABIC_AVAILABLE = Boolean(ARABIC_REGULAR);
-
-const ARABIC_FONT_REGULAR = "WG-Arabic";
-const ARABIC_FONT_BOLD = "WG-Arabic-Bold";
-
-function registerArabicFonts(doc: PDFKit.PDFDocument) {
-  if (!ARABIC_AVAILABLE) return;
-  doc.registerFont(ARABIC_FONT_REGULAR, ARABIC_REGULAR!);
-  doc.registerFont(ARABIC_FONT_BOLD, ARABIC_BOLD!);
-}
-
-/** Pick the right font face for a piece of text (Arabic vs Latin). */
-function pickFont(el: TemplateElement, text: string): string {
-  if (ARABIC_AVAILABLE && hasArabic(text)) {
-    const isBold = (el.font || "").toLowerCase().includes("bold");
-    return isBold ? ARABIC_FONT_BOLD : ARABIC_FONT_REGULAR;
-  }
-  return el.font || "Helvetica";
-}
-
-/** Reshape + reverse Arabic so PDFKit (no bidi) renders it correctly RTL. */
-function shapeText(text: string): string {
-  if (!text || !ARABIC_AVAILABLE || !hasArabic(text)) return text;
-  try {
-    return convertArabic(text)
-      .split("")
-      .reverse()
-      .join("");
-  } catch {
-    return text;
-  }
-}
-
-// ---------------------------------------------------------------------------
 
 export type PdfInvoice = {
   number: string;
@@ -162,260 +83,233 @@ function buildTemplateData(invoice: PdfInvoice, company: PdfCompany): TemplateDa
   };
 }
 
-function isBlank(value?: string): boolean {
-  return !value || value.toLowerCase() === "none" || value.trim() === "";
+// ---------- HTML rendering of template elements ----------
+
+function escapeHtml(s: string): string {
+  return s.replace(
+    /[&<>"']/g,
+    (c) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      }[c] as string)
+  );
 }
 
-type AnyDoc = InstanceType<typeof PDFDocument> & {
-  // helpers (some are already public on PDFDocument)
-};
-
-function drawText(
-  doc: AnyDoc,
-  el: TemplateElement,
-  data: TemplateData
-) {
-  const raw = resolvePlaceholders(el.content || "", data);
-  if (!raw) return;
-  const content = shapeText(raw);
-  doc
-    .fillColor(el.color || "#0f172a")
-    .fontSize(el.fontSize || 11)
-    .font(pickFont(el, raw))
-    .text(content, el.x, el.y, {
-      width: el.w,
-      align: el.align || "left",
-      lineGap: 2,
-    });
+function fontCss(font?: string): string {
+  const f = (font || "Helvetica").toLowerCase();
+  if (f.startsWith("times")) return "'Times New Roman', Times, serif";
+  if (f.startsWith("courier")) return "'Courier New', Courier, monospace";
+  return "Helvetica, Arial, sans-serif";
 }
 
-function drawLine(doc: AnyDoc, el: TemplateElement) {
-  doc
-    .strokeColor(el.strokeColor || "#94a3b8")
-    .lineWidth(el.strokeWidth || 1)
-    .moveTo(el.x, el.y)
-    .lineTo(el.x + el.w, el.y)
-    .stroke();
+function isBold(font?: string): number {
+  return (font || "").toLowerCase().includes("bold") ? 700 : 400;
 }
 
-function drawRect(doc: AnyDoc, el: TemplateElement) {
-  const hasFill = !isBlank(el.fillColor);
-  const hasStroke = !isBlank(el.strokeColor);
-  doc.lineWidth(el.strokeWidth || 1);
-  if (hasFill && hasStroke) {
-    doc.rect(el.x, el.y, el.w, el.h).fillAndStroke(el.fillColor!, el.strokeColor!);
-  } else if (hasFill) {
-    doc.rect(el.x, el.y, el.w, el.h).fill(el.fillColor!);
-  } else if (hasStroke) {
-    doc.rect(el.x, el.y, el.w, el.h).stroke(el.strokeColor!);
-  }
+function pos(el: TemplateElement): string {
+  return `position:absolute;left:${el.x}pt;top:${el.y}pt;width:${el.w}pt;`;
 }
 
-function drawItems(
-  doc: AnyDoc,
-  el: TemplateElement,
-  data: TemplateData
-) {
+function textElement(el: TemplateElement, data: TemplateData): string {
+  const content = escapeHtml(resolvePlaceholders(el.content || "", data));
+  if (!content) return "";
+  return `<div style="${pos(el)}height:${el.h}pt;font-family:${fontCss(
+    el.font
+  )};font-weight:${isBold(el.font)};font-size:${el.fontSize || 11}pt;color:${
+    el.color || "#0f172a"
+  };text-align:${el.align || "left"};line-height:1.3;white-space:pre-wrap;overflow:hidden;">${content}</div>`;
+}
+
+function lineElement(el: TemplateElement): string {
+  return `<div style="${pos(el)}height:${
+    el.strokeWidth || 1
+  }pt;background:${el.strokeColor || "#94a3b8"};"></div>`;
+}
+
+function rectElement(el: TemplateElement): string {
+  const fill =
+    !el.fillColor || el.fillColor === "none" ? "transparent" : el.fillColor;
+  const stroke =
+    !el.strokeColor || el.strokeColor === "none"
+      ? "transparent"
+      : el.strokeColor;
+  return `<div style="${pos(el)}height:${el.h}pt;background:${fill};border:${
+    el.strokeWidth || 1
+  }pt solid ${stroke};"></div>`;
+}
+
+function itemsElement(el: TemplateElement, data: TemplateData): string {
+  const fs = el.fontSize || 9;
+  const fam = fontCss(el.font);
+  const col = el.color || "#0f172a";
   const currency = data.invoice.currency;
-  const fontSize = el.fontSize || 9;
-  const font = el.font || "Helvetica";
-  const color = el.color || "#0f172a";
-  const muted = "#64748b";
 
-  const descW = el.w * 0.5;
-  const qtyX = el.x + el.w * 0.55;
-  const qtyW = el.w * 0.12;
-  const rateX = el.x + el.w * 0.67;
-  const rateW = el.w * 0.16;
-  const amountX = el.x + el.w * 0.83;
-  const amountW = el.w * 0.17;
+  const rows = data.items
+    .map(
+      (it) => `<tr>
+        <td style="width:50%;padding:3px 0;border-bottom:1px solid #f1f5f9;text-align:left;">${escapeHtml(
+          it.description
+        )}</td>
+        <td style="width:12%;padding:3px 4px;border-bottom:1px solid #f1f5f9;text-align:right;">${
+          it.quantity
+        }</td>
+        <td style="width:18%;padding:3px 4px;border-bottom:1px solid #f1f5f9;text-align:right;">${formatMoney(
+          it.unitPrice,
+          currency
+        )}</td>
+        <td style="width:20%;padding:3px 0;border-bottom:1px solid #f1f5f9;text-align:right;">${formatMoney(
+          it.amount,
+          currency
+        )}</td>
+      </tr>`
+    )
+    .join("");
 
-  let y = el.y;
-
-  // Header
-  doc.fillColor(muted).fontSize(fontSize - 1).font("Helvetica-Bold");
-  doc.text("DESCRIPTION", el.x, y, { width: descW });
-  doc.text("QTY", qtyX, y, { width: qtyW, align: "right" });
-  doc.text("RATE", rateX, y, { width: rateW, align: "right" });
-  doc.text("AMOUNT", amountX, y, { width: amountW, align: "right" });
-  y += fontSize + 8;
-
-  doc.strokeColor("#e2e8f0").lineWidth(1).moveTo(el.x, y).lineTo(el.x + el.w, y).stroke();
-  y += 8;
-
-  doc.font(font).fontSize(fontSize).fillColor(color);
-
-  for (const item of data.items) {
-    if (y > PAGE_HEIGHT - PAGE_MARGIN) {
-      doc.addPage();
-      y = PAGE_MARGIN;
-    }
-    const desc = shapeText(item.description);
-    doc.font(pickFont(el, item.description)).text(desc, el.x, y, { width: descW });
-    doc.text(String(item.quantity), qtyX, y, { width: qtyW, align: "right" });
-    doc.text(formatMoney(item.unitPrice, currency), rateX, y, { width: rateW, align: "right" });
-    doc.text(formatMoney(item.amount, currency), amountX, y, { width: amountW, align: "right" });
-    const descHeight = doc.heightOfString(desc, { width: descW });
-    y += Math.max(descHeight, fontSize) + 6;
-  }
+  return `<div style="${pos(el)}font-family:${fam};font-size:${fs}pt;color:${col};">
+    <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+      <thead><tr style="color:#64748b;font-weight:700;font-size:${
+        fs - 1
+      }pt;border-bottom:1px solid #e2e8f0;">
+        <th style="width:50%;padding:0 0 5px;text-align:left;font-weight:700;">DESCRIPTION</th>
+        <th style="width:12%;text-align:right;font-weight:700;">QTY</th>
+        <th style="width:18%;text-align:right;font-weight:700;">RATE</th>
+        <th style="width:20%;text-align:right;font-weight:700;">AMOUNT</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
 }
 
-function drawTotals(
-  doc: AnyDoc,
-  el: TemplateElement,
-  data: TemplateData
-) {
-  const fontSize = el.fontSize || 10;
-  const color = el.color || "#0f172a";
+function totalsElement(el: TemplateElement, data: TemplateData): string {
+  const fs = el.fontSize || 10;
+  const fam = fontCss(el.font);
+  const col = el.color || "#0f172a";
   const muted = "#64748b";
-  const labelW = el.w * 0.55;
-  const valueX = el.x + el.w * 0.45;
-  const valueW = el.w * 0.55;
+  const currency = data.invoice.currency;
+  const showVat = data.invoice.vatAmount !== formatMoney(0, currency);
 
-  let y = el.y;
-
-  const row = (label: string, value: string, bold: boolean) => {
-    doc
-      .fillColor(muted)
-      .font(bold ? "Helvetica-Bold" : "Helvetica")
-      .fontSize(fontSize)
-      .text(label, el.x, y, { width: labelW });
-    doc
-      .fillColor(color)
-      .font(bold ? "Helvetica-Bold" : "Helvetica")
-      .text(value, valueX, y, { width: valueW, align: "right" });
-    y += fontSize + 8;
+  const rows: string[] = [];
+  const push = (label: string, value: string) => {
+    rows.push(
+      `<tr><td style="color:${muted};padding:2px 0;text-align:left;">${label}</td><td style="color:${col};padding:2px 0;text-align:right;">${value}</td></tr>`
+    );
   };
+  push("Subtotal", data.invoice.subtotal);
+  push(`Tax (${data.invoice.taxRate}%)`, data.invoice.taxAmount);
+  if (showVat) push(`VAT (${VAT_RATE}%)`, data.invoice.vatAmount);
+  rows.push(
+    `<tr><td colspan="2" style="border-top:1px solid #e2e8f0;padding-top:4px;"></td></tr>`
+  );
+  rows.push(
+    `<tr style="font-weight:700;"><td style="color:${col};padding-top:2px;text-align:left;">Total</td><td style="color:${col};padding-top:2px;text-align:right;">${data.invoice.total}</td></tr>`
+  );
 
-  row("Subtotal", data.invoice.subtotal, false);
-  row(`Tax (${data.invoice.taxRate}%)`, data.invoice.taxAmount, false);
-  if (data.invoice.vatAmount !== formatMoney(0, data.invoice.currency)) {
-    row(`VAT (${VAT_RATE}%)`, data.invoice.vatAmount, false);
-  }
-  doc.strokeColor("#e2e8f0").lineWidth(1).moveTo(el.x, y).lineTo(el.x + el.w, y).stroke();
-  y += 6;
-  row("Grand total", data.invoice.total, true);
+  return `<div style="${pos(el)}font-family:${fam};font-size:${fs}pt;color:${col};">
+    <table style="width:100%;border-collapse:collapse;">${rows.join("")}</table>
+  </div>`;
 }
 
-function dataUrlToBuffer(src: string): Buffer {
-  const comma = src.indexOf(",");
-  const b64 = comma >= 0 ? src.slice(comma + 1) : src;
-  return Buffer.from(b64, "base64");
+function imageElement(el: TemplateElement): string {
+  if (!el.src) return "";
+  const fit = el.fit === "stretch" ? "fill" : "contain";
+  return `<img src="${el.src}" style="${pos(el)}height:${el.h}pt;object-fit:${fit};" />`;
 }
 
-function drawImage(doc: AnyDoc, el: TemplateElement) {
-  if (!el.src) return;
-  try {
-    const buf = dataUrlToBuffer(el.src);
-    if (el.fit === "stretch") {
-      doc.image(buf, el.x, el.y, { width: el.w, height: el.h });
-    } else {
-      doc.image(buf, el.x, el.y, {
-        fit: [el.w, el.h],
-        align: "center",
-        valign: "center",
-      });
-    }
-  } catch (err) {
-    // Unsupported format or broken image — draw a placeholder box.
-    doc
-      .strokeColor("#94a3b8")
-      .lineWidth(1)
-      .dash(3, { space: 3 })
-      .rect(el.x, el.y, el.w, el.h)
-      .stroke()
-      .undash();
-    doc
-      .fillColor("#94a3b8")
-      .fontSize(8)
-      .font("Helvetica")
-      .text("Image", el.x, el.y + el.h / 2 - 4, {
-        width: el.w,
-        align: "center",
-      });
-  }
-}
-
-function drawStamp(doc: AnyDoc, el: TemplateElement, data: TemplateData) {
-  const raw = resolvePlaceholders(el.content || "", data) || "STAMP";
-  const text = shapeText(raw);
-  const color = el.color || "#c70d3a";
-  const fontSize = el.fontSize || 28;
+function stampElement(el: TemplateElement, data: TemplateData): string {
+  const text = escapeHtml(
+    resolvePlaceholders(el.content || "", data) || "STAMP"
+  );
+  const col = el.color || "#c70d3a";
+  const fs = el.fontSize || 28;
   const angle = el.angle ?? -18;
-  const strokeW = el.strokeWidth ?? 3;
-
-  doc.save();
-  doc.translate(el.x + el.w / 2, el.y + el.h / 2);
-  doc.rotate(angle);
-  doc
-    .strokeColor(color)
-    .lineWidth(strokeW)
-    .roundedRect(-el.w / 2, -el.h / 2, el.w, el.h, 12)
-    .stroke();
-  doc.lineWidth(1).roundedRect(-el.w / 2 + 5, -el.h / 2 + 5, el.w - 10, el.h - 10, 8).stroke();
-  doc
-    .fillColor(color)
-    .font(pickFont({ ...el, font: el.font || "Helvetica-Bold" }, raw))
-    .fontSize(fontSize)
-    .text(text, -el.w / 2, -fontSize / 2, {
-      width: el.w,
-      align: "center",
-    });
-  doc.restore();
+  const sw = el.strokeWidth ?? 3;
+  return `<div style="${pos(el)}height:${el.h}pt;display:flex;align-items:center;justify-content:center;">
+    <div style="transform:rotate(${angle}deg);border:${sw}pt solid ${col};outline:1pt solid ${col};outline-offset:4pt;border-radius:12pt;color:${col};font-weight:700;font-size:${fs}pt;letter-spacing:0.05em;padding:8pt 16pt;text-align:center;">${text}</div>
+  </div>`;
 }
 
-function renderElements(
-  doc: AnyDoc,
-  elements: TemplateElement[],
-  data: TemplateData
-) {
-  for (const el of elements) {
-    switch (el.type) {
-      case "text":
-        drawText(doc, el, data);
-        break;
-      case "line":
-        drawLine(doc, el);
-        break;
-      case "rect":
-        drawRect(doc, el);
-        break;
-      case "items":
-        drawItems(doc, el, data);
-        break;
-      case "totals":
-        drawTotals(doc, el, data);
-        break;
-      case "image":
-        drawImage(doc, el);
-        break;
-      case "stamp":
-        drawStamp(doc, el, data);
-        break;
-    }
+function elementToHtml(el: TemplateElement, data: TemplateData): string {
+  switch (el.type) {
+    case "text":
+      return textElement(el, data);
+    case "line":
+      return lineElement(el);
+    case "rect":
+      return rectElement(el);
+    case "items":
+      return itemsElement(el, data);
+    case "totals":
+      return totalsElement(el, data);
+    case "image":
+      return imageElement(el);
+    case "stamp":
+      return stampElement(el, data);
+    default:
+      return "";
   }
 }
 
-export function renderTemplatePdf(
+function buildHtml(elements: TemplateElement[], data: TemplateData): string {
+  const body = elements.map((el) => elementToHtml(el, data)).join("\n");
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8" /><style>
+  @page { size: ${PAGE_WIDTH}pt ${PAGE_HEIGHT}pt; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #ffffff; }
+  body { font-family: Helvetica, Arial, sans-serif; color: #0f172a; }
+  .page { position: relative; width: ${PAGE_WIDTH}pt; height: ${PAGE_HEIGHT}pt; overflow: hidden; background: #ffffff; }
+  table { border-collapse: collapse; }
+</style></head>
+<body><div class="page">${body}</div></body></html>`;
+}
+
+// ---------- Chromium rendering ----------
+
+let browserPromise: Promise<Browser> | null = null;
+
+async function getBrowser(): Promise<Browser> {
+  if (!browserPromise) {
+    browserPromise = puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+  }
+  return browserPromise;
+}
+
+async function htmlToPdf(html: string): Promise<Buffer> {
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+  try {
+    await page.setContent(html, { waitUntil: "load", timeout: 60000 });
+    const pdf = await page.pdf({
+      preferCSSPageSize: true,
+      printBackground: true,
+    });
+    return Buffer.from(pdf);
+  } finally {
+    await page.close();
+  }
+}
+
+export async function renderTemplatePdf(
   invoice: PdfInvoice,
   company: PdfCompany,
   elements: TemplateElement[]
 ): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: "A4", margin: 0 });
-    const chunks: Buffer[] = [];
-
-    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-    doc.on("error", reject);
-
-    registerArabicFonts(doc);
-
-    const data = buildTemplateData(invoice, company);
-    renderElements(doc as AnyDoc, elements, data);
-
-    doc.end();
-  });
+  const data = buildTemplateData(invoice, company);
+  const html = buildHtml(elements, data);
+  try {
+    return await htmlToPdf(html);
+  } catch (err) {
+    // Reset the cached browser so the next attempt launches a fresh one.
+    browserPromise = null;
+    throw err;
+  }
 }
 
 /** Backward-compatible helper — renders using the default "Classic" layout. */

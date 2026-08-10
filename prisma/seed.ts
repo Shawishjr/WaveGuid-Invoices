@@ -1,12 +1,10 @@
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import {
   defaultElements,
   serializeElements,
   TEMPLATE_DRAFTS,
 } from "../src/lib/templates";
-
-const prisma = new PrismaClient();
+import { prisma } from "../src/lib/prisma";
 
 async function main() {
   // Create default user

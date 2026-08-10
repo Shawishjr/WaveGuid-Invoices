@@ -48,3 +48,19 @@
  GET /invoices/cmsnbq3lg0001tnzgas8192zm 200 in 986ms
  ✓ Compiled /api/invoices/[id]/pdf in 375ms (694 modules)
  GET /api/invoices/cmsnbq3lg0001tnzgas8192zm/pdf 200 in 1839ms
+ ⨯ ./src/lib/prisma.ts:13:30
+Module not found: Can't resolve '@libsql/client'
+  11 |     // Lazy-import so local dev (file: DB) doesn't need the adapter packages.
+  12 |     // eslint-disable-next-line @typescript-eslint/no-var-requires
+> 13 |     const { createClient } = require("@libsql/client");
+     |                              ^
+  14 |     // eslint-disable-next-line @typescript-eslint/no-var-requires
+  15 |     const { PrismaLibSQL } = require("@prisma/adapter-libsql");
+  16 |
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/app/dashboard/page.tsx
+ ✓ Compiled in 776ms (911 modules)
+[?25h
