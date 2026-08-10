@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaLibSQL } from "@prisma/adapter-libsql";
 
 const databaseUrl = process.env.DATABASE_URL ?? "";
 const isTurso = databaseUrl.startsWith("libsql:");
@@ -6,21 +7,14 @@ const isTurso = databaseUrl.startsWith("libsql:");
 function createPrismaClient(): PrismaClient {
   const log = (
     process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"]
-  ) as ("error" | "warn")[];
+  ) as Prisma.LogLevel[];
 
   if (isTurso) {
-    // Lazy-import so local dev (file: DB) doesn't need the adapter packages.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { createClient } = require("@libsql/client");
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { PrismaLibSQL } = require("@prisma/adapter-libsql");
-
-    const libsql = createClient({
+    const adapter = new PrismaLibSQL({
       url: databaseUrl,
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
-    const adapter = new PrismaLibSQL(libsql);
-    return new PrismaClient({ adapter, log } as never);
+    return new PrismaClient({ adapter, log });
   }
 
   return new PrismaClient({ log });
