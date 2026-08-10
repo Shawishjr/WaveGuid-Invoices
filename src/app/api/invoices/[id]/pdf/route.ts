@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { buildInvoicePdf } from "@/lib/pdf";
+import { buildInvoicePdf, renderTemplatePdf } from "@/lib/pdf";
+import { parseElements } from "@/lib/templates";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -9,7 +10,7 @@ export async function GET(_request: Request, { params }: Params) {
 
   const invoice = await prisma.invoice.findUnique({
     where: { id },
-    include: { client: true, items: true },
+    include: { client: true, items: true, template: true },
   });
 
   if (!invoice) {
@@ -23,7 +24,23 @@ export async function GET(_request: Request, { params }: Params) {
     });
   }
 
-  const pdf = await buildInvoicePdf(invoice, company);
+  let pdf: Buffer;
+  if (invoice.template) {
+    pdf = await renderTemplatePdf(
+      invoice,
+      company,
+      parseElements(invoice.template.elements)
+    );
+  } else if (invoice.templateId) {
+    const template = await prisma.invoiceTemplate.findUnique({
+      where: { id: invoice.templateId },
+    });
+    pdf = template
+      ? await renderTemplatePdf(invoice, company, parseElements(template.elements))
+      : await buildInvoicePdf(invoice, company);
+  } else {
+    pdf = await buildInvoicePdf(invoice, company);
+  }
 
   return new NextResponse(new Uint8Array(pdf), {
     status: 200,

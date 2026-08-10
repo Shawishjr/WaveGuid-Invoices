@@ -71,6 +71,7 @@ export async function PUT(request: Request, { params }: Params) {
         taxAmount: totals.taxAmount,
         total: totals.total,
         clientId: clientId!,
+        templateId: data.templateId || null,
         items: {
           create: data.items.map((item) => ({
             description: item.description,

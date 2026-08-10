@@ -58,6 +58,7 @@ export async function POST(request: Request) {
         taxAmount: totals.taxAmount,
         total: totals.total,
         clientId: clientId!,
+        templateId: data.templateId || null,
         items: {
           create: data.items.map((item) => ({
             description: item.description,

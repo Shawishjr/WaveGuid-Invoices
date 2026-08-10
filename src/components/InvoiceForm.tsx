@@ -10,6 +10,11 @@ type Client = {
   company: string | null;
 };
 
+type TemplateOption = {
+  id: string;
+  name: string;
+};
+
 type Item = {
   description: string;
   quantity: number;
@@ -18,6 +23,8 @@ type Item = {
 
 type InvoiceFormProps = {
   clients: Client[];
+  templates: TemplateOption[];
+  defaultTemplateId?: string | null;
   invoice?: {
     id: string;
     number: string;
@@ -28,6 +35,7 @@ type InvoiceFormProps = {
     notes: string | null;
     taxRate: number;
     clientId: string;
+    templateId?: string | null;
     items: Item[];
   };
 };
@@ -47,7 +55,7 @@ function defaultDueDate() {
   return d.toISOString().slice(0, 10);
 }
 
-export function InvoiceForm({ clients, invoice }: InvoiceFormProps) {
+export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: InvoiceFormProps) {
   const router = useRouter();
 
   const initialClient = invoice
@@ -72,6 +80,9 @@ export function InvoiceForm({ clients, invoice }: InvoiceFormProps) {
   );
   const [currency, setCurrency] = useState(invoice?.currency || "USD");
   const [taxRate, setTaxRate] = useState(invoice?.taxRate ?? 0);
+  const [templateId, setTemplateId] = useState<string>(
+    invoice?.templateId || defaultTemplateId || ""
+  );
   const [notes, setNotes] = useState(invoice?.notes || "");
   const [items, setItems] = useState<Item[]>(
     invoice?.items?.length ? invoice.items : [{ ...emptyItem }]
@@ -194,6 +205,7 @@ export function InvoiceForm({ clients, invoice }: InvoiceFormProps) {
       dueDate,
       currency,
       taxRate: Number(taxRate),
+      templateId: templateId || null,
       notes,
       number: invoice?.number,
       items: items.map((item) => ({
@@ -329,6 +341,19 @@ export function InvoiceForm({ clients, invoice }: InvoiceFormProps) {
               <option value="EUR">EUR</option>
               <option value="GBP">GBP</option>
               <option value="AED">AED</option>
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="templateId">PDF template</label>
+            <select
+              id="templateId"
+              value={templateId}
+              onChange={(e) => setTemplateId(e.target.value)}
+            >
+              <option value="">Default layout</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
             </select>
           </div>
           <div className="field">

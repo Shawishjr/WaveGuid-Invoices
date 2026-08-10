@@ -1,5 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import {
+  defaultElements,
+  serializeElements,
+  TEMPLATE_DRAFTS,
+} from "../src/lib/templates";
 
 const prisma = new PrismaClient();
 
@@ -9,7 +14,7 @@ async function main() {
   await prisma.user.create({
     data: {
       email: "admin@waveguid.com",
-      name: "Admin User",
+      name: "Hassan Tariq",
       password: await bcrypt.hash("password123", 10),
     },
   });
@@ -18,6 +23,16 @@ async function main() {
   await prisma.invoiceItem.deleteMany();
   await prisma.invoice.deleteMany();
   await prisma.client.deleteMany();
+  await prisma.invoiceTemplate.deleteMany();
+
+  const templates = await Promise.all(
+    TEMPLATE_DRAFTS.map((draft) =>
+      prisma.invoiceTemplate.create({
+        data: { name: draft.name, elements: serializeElements(draft.elements()) },
+      })
+    )
+  );
+  const defaultTemplateId = templates[0].id;
 
   await prisma.companySettings.create({
     data: {
@@ -26,6 +41,7 @@ async function main() {
       phone: "+1 (555) 010-2000",
       address: "120 Harbor Avenue, Suite 400\nSan Francisco, CA 94105",
       website: "https://waveguid.com",
+      defaultTemplateId,
     },
   });
 

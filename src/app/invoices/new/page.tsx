@@ -4,7 +4,11 @@ import { InvoiceForm } from "@/components/InvoiceForm";
 export const dynamic = "force-dynamic";
 
 export default async function NewInvoicePage() {
-  const clients = await prisma.client.findMany({ orderBy: { name: "asc" } });
+  const [clients, templates, company] = await Promise.all([
+    prisma.client.findMany({ orderBy: { name: "asc" } }),
+    prisma.invoiceTemplate.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, name: true } }),
+    prisma.companySettings.findFirst(),
+  ]);
 
   return (
     <>
@@ -16,7 +20,11 @@ export default async function NewInvoicePage() {
           Add line items, set tax, and save — then export as PDF anytime.
         </p>
       </section>
-      <InvoiceForm clients={clients} />
+      <InvoiceForm
+        clients={clients}
+        templates={templates}
+        defaultTemplateId={company?.defaultTemplateId}
+      />
     </>
   );
 }

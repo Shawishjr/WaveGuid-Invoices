@@ -33,9 +33,11 @@ model Invoice {
   total         Float         @default(0)
   clientId      String
   client        Client        @relation(fields: [clientId], references: [id])
+  templateId    String?
+  template      InvoiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   items         InvoiceItem[]
   createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  updatedAt     DateTime @updatedAt
 }
 
 model InvoiceItem {
@@ -49,13 +51,14 @@ model InvoiceItem {
 }
 
 model CompanySettings {
-  id      String  @id @default(cuid())
-  name    String  @default("WaveGuid")
-  email   String?
-  phone   String?
-  address String?
-  website String?
-  logoUrl String?
+  id               String  @id @default(cuid())
+  name             String  @default("WaveGuid")
+  email            String?
+  phone            String?
+  address          String?
+  website          String?
+  logoUrl          String?
+  defaultTemplateId String?
 }
 
 model User {
@@ -65,4 +68,13 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model InvoiceTemplate {
+  id        String    @id @default(cuid())
+  name      String
+  elements  String    // JSON-encoded array of TemplateElement
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  invoices  Invoice[]
 }

@@ -27,6 +27,7 @@ export const invoiceSchema = z
     currency: z.string().default("USD"),
     notes: z.string().optional().nullable(),
     taxRate: z.coerce.number().min(0).default(0),
+    templateId: z.string().min(1).optional().nullable(),
     items: z.array(invoiceItemSchema).min(1, "Add at least one line item"),
   })
   .refine((data) => data.clientId || data.clientName, {

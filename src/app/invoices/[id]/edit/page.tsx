@@ -9,12 +9,13 @@ type Props = { params: Promise<{ id: string }> };
 export default async function EditInvoicePage({ params }: Props) {
   const { id } = await params;
 
-  const [invoice, clients] = await Promise.all([
+  const [invoice, clients, templates] = await Promise.all([
     prisma.invoice.findUnique({
       where: { id },
       include: { items: true },
     }),
     prisma.client.findMany({ orderBy: { name: "asc" } }),
+    prisma.invoiceTemplate.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, name: true } }),
   ]);
 
   if (!invoice) notFound();
@@ -31,6 +32,7 @@ export default async function EditInvoicePage({ params }: Props) {
       </section>
       <InvoiceForm
         clients={clients}
+        templates={templates}
         invoice={{
           id: invoice.id,
           number: invoice.number,
@@ -41,6 +43,7 @@ export default async function EditInvoicePage({ params }: Props) {
           notes: invoice.notes,
           taxRate: invoice.taxRate,
           clientId: invoice.clientId,
+          templateId: invoice.templateId,
           items: invoice.items.map((item) => ({
             description: item.description,
             quantity: item.quantity,
