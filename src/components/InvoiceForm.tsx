@@ -183,6 +183,29 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
     );
   }
 
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
+  function moveItem(index: number, dir: -1 | 1) {
+    setItems((prev) => {
+      const target = index + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  function handleItemDrop(targetIndex: number) {
+    setItems((prev) => {
+      if (dragIndex === null || dragIndex === targetIndex) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(dragIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+    setDragIndex(null);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -345,9 +368,7 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
               onChange={(e) => setCurrency(e.target.value)}
             >
               <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="GBP">GBP</option>
-              <option value="AED">AED</option>
+              <option value="SDG">SDG</option>
             </select>
           </div>
           <div className="field">
@@ -412,6 +433,7 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
           <table className="items-table">
             <thead>
               <tr>
+                <th className="items-grip-col" aria-label="Reorder" />
                 <th>Description</th>
                 <th>Qty</th>
                 <th>Unit price</th>
@@ -421,7 +443,31 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
             </thead>
             <tbody>
               {items.map((item, index) => (
-                <tr key={index}>
+                <tr
+                  key={index}
+                  className={dragIndex === index ? "is-dragging" : ""}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => handleItemDrop(index)}
+                >
+                  <td className="items-grip-col">
+                    <span
+                      className="items-grip"
+                      draggable
+                      onDragStart={() => setDragIndex(index)}
+                      onDragEnd={() => setDragIndex(null)}
+                      title="Drag to reorder"
+                      aria-label="Drag to reorder"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="9" cy="6" r="1.6" />
+                        <circle cx="15" cy="6" r="1.6" />
+                        <circle cx="9" cy="12" r="1.6" />
+                        <circle cx="15" cy="12" r="1.6" />
+                        <circle cx="9" cy="18" r="1.6" />
+                        <circle cx="15" cy="18" r="1.6" />
+                      </svg>
+                    </span>
+                  </td>
                   <td style={{ minWidth: 220 }}>
                     <input
                       required
@@ -467,16 +513,38 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
                     )}
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      disabled={items.length === 1}
-                      onClick={() =>
-                        setItems((prev) => prev.filter((_, i) => i !== index))
-                      }
-                    >
-                      Remove
-                    </button>
+                    <div className="item-row-actions">
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        disabled={index === 0}
+                        onClick={() => moveItem(index, -1)}
+                        aria-label="Move up"
+                        title="Move up"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        disabled={index === items.length - 1}
+                        onClick={() => moveItem(index, 1)}
+                        aria-label="Move down"
+                        title="Move down"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        disabled={items.length === 1}
+                        onClick={() =>
+                          setItems((prev) => prev.filter((_, i) => i !== index))
+                        }
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

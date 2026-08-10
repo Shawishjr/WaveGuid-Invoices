@@ -1597,3 +1597,98 @@ tr:hover td {
   background: rgba(7, 108, 95, 0.16);
 }
 
+/* ---------- Filter chips ---------- */
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.filter-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filter-chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.filter-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.filter-chip.is-active .filter-chip-count {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--on-accent);
+}
+
+/* ---------- Item reorder ---------- */
+.items-grip-col {
+  width: 34px;
+  padding-left: 12px;
+  padding-right: 0;
+}
+
+.items-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: var(--muted);
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.items-grip:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.items-grip:active {
+  cursor: grabbing;
+}
+
+.items-table tr.is-dragging {
+  opacity: 0.4;
+  background: var(--accent-soft);
+}
+
+.item-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.item-row-actions .btn-sm {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+

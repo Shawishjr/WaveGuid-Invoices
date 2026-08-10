@@ -1,4 +1,7 @@
 import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
+import { convertArabic } from "arabic-reshaper";
 import { formatDate, formatMoney, VAT_RATE } from "./invoices";
 import {
   PAGE_HEIGHT,
@@ -9,6 +12,81 @@ import {
   defaultElements,
   TemplateData,
 } from "./templates";
+
+// ---- Arabic support -------------------------------------------------------
+// PDFKit's built-in fonts are Latin-only, so Arabic glyphs render as tofu.
+// We register an Arabic-capable TTF (Tahoma on Windows / Noto on Linux),
+// reshape Arabic into connected presentation forms, and reverse for RTL.
+const ARABIC_RE =
+  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+function hasArabic(text: string): boolean {
+  return ARABIC_RE.test(text);
+}
+
+function resolveArabicFont(weight: "regular" | "bold"): string | null {
+  const windir = process.env.WINDIR || "C:\\Windows";
+  const candidates =
+    weight === "bold"
+      ? [
+          path.join(windir, "Fonts", "tahomabd.ttf"),
+          path.join(windir, "Fonts", "arialbd.ttf"),
+          path.join(windir, "Fonts", "arial.ttf"),
+          "/usr/share/fonts/truetype/noto/NotoSansArabic-Bold.ttf",
+          "/usr/share/fonts/noto/NotoNaskhArabic-Bold.ttf",
+        ]
+      : [
+          path.join(windir, "Fonts", "tahoma.ttf"),
+          path.join(windir, "Fonts", "arial.ttf"),
+          "/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf",
+          "/usr/share/fonts/noto/NotoNaskhArabic-Regular.ttf",
+        ];
+  for (const c of candidates) {
+    try {
+      if (fs.existsSync(c)) return c;
+    } catch {
+      /* ignore */
+    }
+  }
+  return null;
+}
+
+const ARABIC_REGULAR = resolveArabicFont("regular");
+const ARABIC_BOLD = resolveArabicFont("bold") || ARABIC_REGULAR;
+const ARABIC_AVAILABLE = Boolean(ARABIC_REGULAR);
+
+const ARABIC_FONT_REGULAR = "WG-Arabic";
+const ARABIC_FONT_BOLD = "WG-Arabic-Bold";
+
+function registerArabicFonts(doc: PDFKit.PDFDocument) {
+  if (!ARABIC_AVAILABLE) return;
+  doc.registerFont(ARABIC_FONT_REGULAR, ARABIC_REGULAR!);
+  doc.registerFont(ARABIC_FONT_BOLD, ARABIC_BOLD!);
+}
+
+/** Pick the right font face for a piece of text (Arabic vs Latin). */
+function pickFont(el: TemplateElement, text: string): string {
+  if (ARABIC_AVAILABLE && hasArabic(text)) {
+    const isBold = (el.font || "").toLowerCase().includes("bold");
+    return isBold ? ARABIC_FONT_BOLD : ARABIC_FONT_REGULAR;
+  }
+  return el.font || "Helvetica";
+}
+
+/** Reshape + reverse Arabic so PDFKit (no bidi) renders it correctly RTL. */
+function shapeText(text: string): string {
+  if (!text || !ARABIC_AVAILABLE || !hasArabic(text)) return text;
+  try {
+    return convertArabic(text)
+      .split("")
+      .reverse()
+      .join("");
+  } catch {
+    return text;
+  }
+}
+
+// ---------------------------------------------------------------------------
 
 export type PdfInvoice = {
   number: string;
@@ -97,12 +175,13 @@ function drawText(
   el: TemplateElement,
   data: TemplateData
 ) {
-  const content = resolvePlaceholders(el.content || "", data);
-  if (!content) return;
+  const raw = resolvePlaceholders(el.content || "", data);
+  if (!raw) return;
+  const content = shapeText(raw);
   doc
     .fillColor(el.color || "#0f172a")
     .fontSize(el.fontSize || 11)
-    .font(el.font || "Helvetica")
+    .font(pickFont(el, raw))
     .text(content, el.x, el.y, {
       width: el.w,
       align: el.align || "left",
@@ -171,11 +250,12 @@ function drawItems(
       doc.addPage();
       y = PAGE_MARGIN;
     }
-    doc.text(item.description, el.x, y, { width: descW });
+    const desc = shapeText(item.description);
+    doc.font(pickFont(el, item.description)).text(desc, el.x, y, { width: descW });
     doc.text(String(item.quantity), qtyX, y, { width: qtyW, align: "right" });
     doc.text(formatMoney(item.unitPrice, currency), rateX, y, { width: rateW, align: "right" });
     doc.text(formatMoney(item.amount, currency), amountX, y, { width: amountW, align: "right" });
-    const descHeight = doc.heightOfString(item.description, { width: descW });
+    const descHeight = doc.heightOfString(desc, { width: descW });
     y += Math.max(descHeight, fontSize) + 6;
   }
 }
@@ -257,7 +337,8 @@ function drawImage(doc: AnyDoc, el: TemplateElement) {
 }
 
 function drawStamp(doc: AnyDoc, el: TemplateElement, data: TemplateData) {
-  const text = resolvePlaceholders(el.content || "", data) || "STAMP";
+  const raw = resolvePlaceholders(el.content || "", data) || "STAMP";
+  const text = shapeText(raw);
   const color = el.color || "#c70d3a";
   const fontSize = el.fontSize || 28;
   const angle = el.angle ?? -18;
@@ -274,7 +355,7 @@ function drawStamp(doc: AnyDoc, el: TemplateElement, data: TemplateData) {
   doc.lineWidth(1).roundedRect(-el.w / 2 + 5, -el.h / 2 + 5, el.w - 10, el.h - 10, 8).stroke();
   doc
     .fillColor(color)
-    .font("Helvetica-Bold")
+    .font(pickFont({ ...el, font: el.font || "Helvetica-Bold" }, raw))
     .fontSize(fontSize)
     .text(text, -el.w / 2, -fontSize / 2, {
       width: el.w,
@@ -327,6 +408,8 @@ export function renderTemplatePdf(
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
+
+    registerArabicFonts(doc);
 
     const data = buildTemplateData(invoice, company);
     renderElements(doc as AnyDoc, elements, data);
