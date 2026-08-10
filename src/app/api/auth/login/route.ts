@@ -6,7 +6,14 @@ import {
   SESSION_COOKIE_NAME,
 } from "@/lib/auth";
 
+function origin(request: Request) {
+  const proto = request.headers.get("x-forwarded-proto") || "http";
+  const host = request.headers.get("host");
+  return host ? `${proto}://${host}` : request.url;
+}
+
 export async function POST(request: Request) {
+  const base = origin(request);
   try {
     const body = await request.text();
     const params = new URLSearchParams(body);
@@ -16,7 +23,10 @@ export async function POST(request: Request) {
 
     if (!email || !password) {
       return NextResponse.redirect(
-        new URL("/login?error=" + encodeURIComponent("Email and password are required"), request.url)
+        new URL(
+          "/login?error=" + encodeURIComponent("Email and password are required"),
+          base
+        )
       );
     }
 
@@ -26,14 +36,20 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.redirect(
-        new URL("/login?error=" + encodeURIComponent("Invalid email or password"), request.url)
+        new URL(
+          "/login?error=" + encodeURIComponent("Invalid email or password"),
+          base
+        )
       );
     }
 
     const valid = await comparePassword(password, user.password);
     if (!valid) {
       return NextResponse.redirect(
-        new URL("/login?error=" + encodeURIComponent("Invalid email or password"), request.url)
+        new URL(
+          "/login?error=" + encodeURIComponent("Invalid email or password"),
+          base
+        )
       );
     }
 
@@ -43,7 +59,7 @@ export async function POST(request: Request) {
       name: user.name,
     });
 
-    const response = NextResponse.redirect(new URL(callbackUrl, request.url));
+    const response = NextResponse.redirect(new URL(callbackUrl, base));
     response.cookies.set(SESSION_COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -56,7 +72,10 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.redirect(
-      new URL("/login?error=" + encodeURIComponent("Something went wrong"), request.url)
+      new URL(
+        "/login?error=" + encodeURIComponent("Something went wrong"),
+        base
+      )
     );
   }
 }
