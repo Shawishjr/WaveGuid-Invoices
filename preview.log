@@ -1,66 +1,24 @@
 
 > waveguid-invoices@0.1.0 dev
-> next dev
+> next dev --hostname 0.0.0.0 --port 3000
 
    ▲ Next.js 15.5.22
    - Local:        http://localhost:3000
-   - Network:      http://192.168.41.1:3000
+   - Network:      http://0.0.0.0:3000
    - Environments: .env
 
  ✓ Starting...
- ✓ Ready in 3.9s
+ ✓ Ready in 13.3s
+ ○ Compiling /login ...
+ ✓ Compiled /login in 3.1s (696 modules)
+ GET /login 200 in 3983ms
  ○ Compiling /middleware ...
- ✓ Compiled /middleware in 729ms (183 modules)
+ ✓ Compiled /middleware in 586ms (183 modules)
  ○ Compiling / ...
- ✓ Compiled / in 1291ms (852 modules)
- GET / 307 in 2079ms
- ○ Compiling /dashboard ...
- ✓ Compiled /dashboard in 1484ms (872 modules)
- GET /dashboard 200 in 2241ms
- ✓ Compiled in 1791ms (874 modules)
- GET /dashboard 200 in 378ms
- GET /dashboard 200 in 408ms
- ○ Compiling /invoices ...
- ✓ Compiled /invoices in 625ms (868 modules)
- GET /invoices 200 in 903ms
- GET /invoices?status=draft 200 in 69ms
- GET /invoices?status=sent 200 in 62ms
- GET /invoices?status=paid 200 in 73ms
- GET /invoices?status=overdue 200 in 45ms
- GET /invoices?status=cancelled 200 in 48ms
- GET /dashboard 200 in 123ms
- ○ Compiling /invoices/new ...
- ✓ Compiled /invoices/new in 985ms (898 modules)
- GET /invoices/new 200 in 1231ms
- ○ Compiling /api/invoices ...
- ✓ Compiled /api/invoices in 642ms (916 modules)
- POST /api/invoices 201 in 938ms
- ○ Compiling /invoices/[id] ...
- ✓ Compiled /invoices/[id] in 605ms (932 modules)
- GET /invoices/cmsnbq3lg0001tnzgas8192zm 200 in 2004ms
- GET /invoices/cmsnbq3lg0001tnzgas8192zm 200 in 93ms
- ○ Compiling /api/invoices/[id]/pdf ...
- ✓ Compiled /api/invoices/[id]/pdf in 647ms (937 modules)
- GET /api/invoices/cmsnbq3lg0001tnzgas8192zm/pdf 200 in 2078ms
- ✓ Compiled in 333ms (243 modules)
- ✓ Compiled in 404ms (657 modules)
- ✓ Compiled /invoices/[id] in 347ms (671 modules)
- GET /invoices/cmsnbq3lg0001tnzgas8192zm 200 in 986ms
- ✓ Compiled /api/invoices/[id]/pdf in 375ms (694 modules)
- GET /api/invoices/cmsnbq3lg0001tnzgas8192zm/pdf 200 in 1839ms
- ⨯ ./src/lib/prisma.ts:13:30
-Module not found: Can't resolve '@libsql/client'
-  11 |     // Lazy-import so local dev (file: DB) doesn't need the adapter packages.
-  12 |     // eslint-disable-next-line @typescript-eslint/no-var-requires
-> 13 |     const { createClient } = require("@libsql/client");
-     |                              ^
-  14 |     // eslint-disable-next-line @typescript-eslint/no-var-requires
-  15 |     const { PrismaLibSQL } = require("@prisma/adapter-libsql");
-  16 |
-
-https://nextjs.org/docs/messages/module-not-found
-
-Import trace for requested module:
-./src/app/dashboard/page.tsx
- ✓ Compiled in 776ms (911 modules)
-[?25h
+ ✓ Compiled / in 584ms (856 modules)
+ GET / 307 in 1098ms
+ ✓ Compiled /dashboard in 486ms (874 modules)
+ GET /dashboard 200 in 1104ms
+ GET /dashboard 200 in 199ms
+ GET /dashboard 200 in 196ms
+ GET /dashboard 200 in 290ms

@@ -66,6 +66,7 @@ export async function PUT(request: Request, { params }: Params) {
         dueDate: new Date(data.dueDate),
         currency: data.currency,
         notes: data.notes || null,
+        subject: data.subject || null,
         taxRate: data.taxRate,
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,

@@ -82,6 +82,7 @@ export type TemplateData = {
   };
   invoice: {
     number: string;
+    subject: string;
     status: string;
     issueDate: string;
     dueDate: string;
@@ -119,6 +120,7 @@ export const SAMPLE_DATA: TemplateData = {
   },
   invoice: {
     number: "INV-1001",
+    subject: "Website design services — Q3 retainer",
     status: "sent",
     issueDate: formatDate(new Date()),
     dueDate: formatDate(new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)),
@@ -301,6 +303,7 @@ export const PLACEHOLDER_HINTS: { token: string; label: string }[] = [
   { token: "{{client.address}}", label: "Client address" },
   { token: "{{client.email}}", label: "Client email" },
   { token: "{{invoice.number}}", label: "Invoice number" },
+  { token: "{{invoice.subject}}", label: "Subject" },
   { token: "{{invoice.status}}", label: "Status" },
   { token: "{{invoice.issueDate}}", label: "Issue date" },
   { token: "{{invoice.dueDate}}", label: "Due date" },

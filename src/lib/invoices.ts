@@ -28,6 +28,7 @@ export const invoiceSchema = z
     dueDate: z.string().min(1),
     currency: z.string().default("USD"),
     notes: z.string().optional().nullable(),
+    subject: z.string().optional().nullable(),
     taxRate: z.coerce.number().min(0).default(0),
     includeVat: z.boolean().default(false),
     templateId: z.string().min(1).optional().nullable(),

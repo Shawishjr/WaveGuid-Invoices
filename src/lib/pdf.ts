@@ -11,6 +11,7 @@ import {
 
 export type PdfInvoice = {
   number: string;
+  subject: string | null;
   status: string;
   issueDate: Date;
   dueDate: Date;
@@ -63,6 +64,7 @@ function buildTemplateData(invoice: PdfInvoice, company: PdfCompany): TemplateDa
     },
     invoice: {
       number: invoice.number,
+      subject: invoice.subject || "",
       status: invoice.status,
       issueDate: formatDate(invoice.issueDate),
       dueDate: formatDate(invoice.dueDate),
@@ -199,7 +201,6 @@ function totalsElement(el: TemplateElement, data: TemplateData): string {
     );
   };
   push("Subtotal", data.invoice.subtotal);
-  push(`Tax (${data.invoice.taxRate}%)`, data.invoice.taxAmount);
   if (showVat) push(`VAT (${VAT_RATE}%)`, data.invoice.vatAmount);
   rows.push(
     `<tr><td colspan="2" style="border-top:1px solid #e2e8f0;padding-top:4px;"></td></tr>`
@@ -274,7 +275,7 @@ let browserPromise: Promise<Browser> | null = null;
 async function getBrowser(): Promise<Browser> {
   if (!browserPromise) {
     browserPromise = puppeteer.launch({
-      headless: true,
+      headless: "shell",
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
   }

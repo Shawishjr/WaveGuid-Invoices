@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       userId: user.id,
       email: user.email,
       name: user.name,
+      role: user.role,
     });
 
     const isHttps =

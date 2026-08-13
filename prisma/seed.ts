@@ -7,13 +7,22 @@ import {
 import { prisma } from "../src/lib/prisma";
 
 async function main() {
-  // Create default user
+  // Create default users
   await prisma.user.deleteMany();
   await prisma.user.create({
     data: {
       email: "admin@waveguid.com",
       name: "Hassan Tariq",
       password: await bcrypt.hash("password123", 10),
+      role: "SUPER_ADMIN",
+    },
+  });
+  await prisma.user.create({
+    data: {
+      email: "shawish@waveguid.com",
+      name: "Shawish",
+      password: await bcrypt.hash("admin123", 10),
+      role: "SUPER_ADMIN",
     },
   });
 

@@ -3,7 +3,12 @@ import { InvoiceForm } from "@/components/InvoiceForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewInvoicePage() {
+export default async function NewInvoicePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ clientId?: string }>;
+}) {
+  const { clientId } = await searchParams;
   const [clients, templates, company] = await Promise.all([
     prisma.client.findMany({ orderBy: { name: "asc" } }),
     prisma.invoiceTemplate.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, name: true } }),
@@ -24,6 +29,7 @@ export default async function NewInvoicePage() {
         clients={clients}
         templates={templates}
         defaultTemplateId={company?.defaultTemplateId}
+        defaultClientId={clientId}
       />
     </>
   );

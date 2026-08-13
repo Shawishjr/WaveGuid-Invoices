@@ -30,6 +30,11 @@ export default async function InvoiceDetailPage({ params }: Props) {
               {company?.name || "WaveGuid"}
             </p>
             <h2>{invoice.number}</h2>
+            {invoice.subject && (
+              <p style={{ margin: "4px 0 0", color: "var(--ink)", fontWeight: 600 }}>
+                {invoice.subject}
+              </p>
+            )}
           </div>
           <StatusBadge status={invoice.status} />
         </header>
@@ -89,10 +94,6 @@ export default async function InvoiceDetailPage({ params }: Props) {
           <div>
             <span>Subtotal</span>
             <span>{formatMoney(invoice.subtotal, invoice.currency)}</span>
-          </div>
-          <div>
-            <span>Tax ({invoice.taxRate}%)</span>
-            <span>{formatMoney(invoice.taxAmount, invoice.currency)}</span>
           </div>
           {invoice.vatAmount > 0 && (
             <div>

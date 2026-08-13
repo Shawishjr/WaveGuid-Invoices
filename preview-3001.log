@@ -1,0 +1,26 @@
+
+> waveguid-invoices@0.1.0 dev
+> next dev --hostname 0.0.0.0 --port 3001
+
+   ▲ Next.js 15.5.22
+   - Local:        http://localhost:3001
+   - Network:      http://0.0.0.0:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 13.4s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 560ms (183 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 1359ms (856 modules)
+ GET / 307 in 2299ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1210ms (874 modules)
+ GET /dashboard 200 in 2039ms
+ ○ Compiling /settings ...
+ ✓ Compiled /settings in 757ms (907 modules)
+ GET /settings 200 in 994ms
+ ○ Compiling /api/users/[id] ...
+ ✓ Compiled /api/users/[id] in 867ms (921 modules)
+ PUT /api/users/cmslzt7er0000tnp4njdv3psc 200 in 2286ms
+ GET /settings 200 in 136ms

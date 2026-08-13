@@ -28,6 +28,7 @@ export async function GET(_request: Request, { params }: Params) {
     const companyRow = await prisma.companySettings.findFirst();
     invoice = {
       number: latest.number,
+      subject: latest.subject,
       status: latest.status,
       issueDate: latest.issueDate,
       dueDate: latest.dueDate,
@@ -62,6 +63,7 @@ export async function GET(_request: Request, { params }: Params) {
   } else {
     invoice = {
       number: SAMPLE_DATA.invoice.number,
+      subject: SAMPLE_DATA.invoice.subject,
       status: SAMPLE_DATA.invoice.status,
       issueDate: new Date(),
       dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),

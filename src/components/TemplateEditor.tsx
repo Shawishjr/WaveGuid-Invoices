@@ -829,7 +829,6 @@ function ElementView({
       }}
     >
       <TotalsRow label="Subtotal" value={SAMPLE_DATA.invoice.subtotal} />
-      <TotalsRow label={`Tax (${SAMPLE_DATA.invoice.taxRate}%)`} value={SAMPLE_DATA.invoice.taxAmount} />
       <div style={{ borderTop: "1px solid #e2e8f0" }} />
       <TotalsRow label="Total" value={SAMPLE_DATA.invoice.total} bold />
       <span style={{ position: "absolute", top: -14, left: 0, fontSize: 9, color: "#94a3b8", fontWeight: 600 }}>

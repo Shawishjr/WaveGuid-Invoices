@@ -7,9 +7,11 @@ import { useEffect, useState } from "react";
 export default function AppShell({
   children,
   userName,
+  userImage,
 }: Readonly<{
   children: React.ReactNode;
   userName?: string | null;
+  userImage?: string | null;
 }>) {
   const pathname = usePathname();
   const router = useRouter();
@@ -182,7 +184,15 @@ export default function AppShell({
 
               <Link href="/settings" className="user-chip" aria-label="Open settings">
                 <div className="user-avatar">
-                  {(userName?.trim() || "A").charAt(0).toUpperCase()}
+                  {userImage ? (
+                    <img
+                      src={userImage}
+                      alt={userName?.trim() || "Account"}
+                      className="user-avatar-img"
+                    />
+                  ) : (
+                    (userName?.trim() || "A").charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div className="user-copy">
                   <strong>{userName?.trim() || "Admin"}</strong>

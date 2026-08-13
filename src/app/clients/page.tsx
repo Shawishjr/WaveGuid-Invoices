@@ -3,16 +3,41 @@ import { ClientManager } from "@/components/ClientManager";
 
 export const dynamic = "force-dynamic";
 
+const OUTSTANDING_STATUSES = ["sent", "overdue"];
+
 export default async function ClientsPage() {
   const clients = await prisma.client.findMany({
     orderBy: { name: "asc" },
     include: {
       invoices: {
         orderBy: { issueDate: "desc" },
-        select: { id: true, number: true, issueDate: true, status: true, total: true, currency: true },
+        select: {
+          id: true,
+          number: true,
+          issueDate: true,
+          dueDate: true,
+          status: true,
+          total: true,
+          currency: true,
+        },
       },
     },
   });
 
-  return <ClientManager clients={clients} />;
+  const enriched = clients.map((client) => {
+    const outstanding = client.invoices.filter((inv) =>
+      OUTSTANDING_STATUSES.includes(inv.status)
+    );
+    const owed = outstanding.reduce((sum, inv) => sum + inv.total, 0);
+    const owedCurrency = outstanding[0]?.currency ?? client.invoices[0]?.currency ?? "USD";
+
+    return {
+      ...client,
+      invoiceCount: client.invoices.length,
+      owed,
+      owedCurrency,
+    };
+  });
+
+  return <ClientManager clients={enriched} />;
 }

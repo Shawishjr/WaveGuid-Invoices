@@ -25,6 +25,7 @@ type InvoiceFormProps = {
   clients: Client[];
   templates: TemplateOption[];
   defaultTemplateId?: string | null;
+  defaultClientId?: string;
   invoice?: {
     id: string;
     number: string;
@@ -33,6 +34,7 @@ type InvoiceFormProps = {
     dueDate: string;
     currency: string;
     notes: string | null;
+    subject: string | null;
     taxRate: number;
     vatAmount?: number;
     clientId: string;
@@ -56,19 +58,22 @@ function defaultDueDate() {
   return d.toISOString().slice(0, 10);
 }
 
-export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: InvoiceFormProps) {
+export function InvoiceForm({ clients, templates, defaultTemplateId, defaultClientId, invoice }: InvoiceFormProps) {
   const router = useRouter();
 
+  const presetClient = !invoice && defaultClientId
+    ? clients.find((c) => c.id === defaultClientId)
+    : undefined;
   const initialClient = invoice
     ? clients.find((c) => c.id === invoice.clientId)
-    : undefined;
+    : presetClient;
   const initialClientName = initialClient
     ? initialClient.company || initialClient.name
     : "";
 
   const [clientName, setClientName] = useState(initialClientName);
   const [selectedClientId, setSelectedClientId] = useState(
-    invoice?.clientId || ""
+    invoice?.clientId || presetClient?.id || ""
   );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
@@ -80,7 +85,6 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
     invoice?.dueDate ? toInputDate(invoice.dueDate) : defaultDueDate()
   );
   const [currency, setCurrency] = useState(invoice?.currency || "USD");
-  const [taxRate, setTaxRate] = useState(invoice?.taxRate ?? 0);
   const [includeVat, setIncludeVat] = useState(
     invoice?.vatAmount ? invoice.vatAmount > 0 : false
   );
@@ -88,6 +92,7 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
     invoice?.templateId || defaultTemplateId || ""
   );
   const [notes, setNotes] = useState(invoice?.notes || "");
+  const [subject, setSubject] = useState(invoice?.subject || "");
   const [items, setItems] = useState<Item[]>(
     invoice?.items?.length ? invoice.items : [{ ...emptyItem }]
   );
@@ -99,15 +104,13 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
       (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
       0
     );
-    const taxAmount = (subtotal * Number(taxRate)) / 100;
     const vatAmount = includeVat ? roundMoney((subtotal * VAT_RATE) / 100) : 0;
     return {
       subtotal,
-      taxAmount,
       vatAmount,
-      total: subtotal + taxAmount + vatAmount,
+      total: subtotal + vatAmount,
     };
-  }, [items, taxRate, includeVat]);
+  }, [items, includeVat]);
 
   const suggestions = useMemo(() => {
     if (!clientName.trim()) return [];
@@ -233,10 +236,11 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
       issueDate,
       dueDate,
       currency,
-      taxRate: Number(taxRate),
+      taxRate: 0,
       includeVat,
       templateId: templateId || null,
       notes,
+      subject: subject.trim() || null,
       number: invoice?.number,
       items: items.map((item) => ({
         description: item.description,
@@ -327,6 +331,16 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
             </div>
           </div>
           <div className="field">
+            <label htmlFor="subject">Subject</label>
+            <input
+              id="subject"
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="What is this invoice about?"
+            />
+          </div>
+          <div className="field">
             <label htmlFor="status">Status</label>
             <select
               id="status"
@@ -383,17 +397,6 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
-          </div>
-          <div className="field">
-            <label htmlFor="taxRate">Tax rate (%)</label>
-            <input
-              id="taxRate"
-              type="number"
-              min="0"
-              step="0.01"
-              value={taxRate}
-              onChange={(e) => setTaxRate(Number(e.target.value))}
-            />
           </div>
           <div className="field field-vat">
             <label htmlFor="includeVat" className="vat-label">
@@ -556,10 +559,6 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, invoice }: 
             <div>
               <span>Subtotal</span>
               <span>{formatMoney(totals.subtotal, currency)}</span>
-            </div>
-            <div>
-              <span>Tax</span>
-              <span>{formatMoney(totals.taxAmount, currency)}</span>
             </div>
             {includeVat && (
               <div>

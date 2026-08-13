@@ -41,6 +41,7 @@ export default async function EditInvoicePage({ params }: Props) {
           dueDate: invoice.dueDate.toISOString(),
           currency: invoice.currency,
           notes: invoice.notes,
+          subject: invoice.subject,
           taxRate: invoice.taxRate,
           vatAmount: invoice.vatAmount,
           clientId: invoice.clientId,
