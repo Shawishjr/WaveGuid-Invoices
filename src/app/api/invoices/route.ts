@@ -41,10 +41,25 @@ export async function POST(request: Request) {
         clientId = existing.id;
       } else {
         const newClient = await prisma.client.create({
-          data: { name: data.clientName },
+          data: {
+            name: data.clientName,
+            email: data.clientEmail || null,
+            phone: data.clientPhone || null,
+          },
         });
         clientId = newClient.id;
       }
+    }
+
+    // Keep the client's contact info in sync when provided on the invoice form
+    if (clientId && (data.clientEmail || data.clientPhone)) {
+      await prisma.client.update({
+        where: { id: clientId },
+        data: {
+          ...(data.clientEmail ? { email: data.clientEmail } : {}),
+          ...(data.clientPhone ? { phone: data.clientPhone } : {}),
+        },
+      });
     }
 
     const invoice = await prisma.invoice.create({

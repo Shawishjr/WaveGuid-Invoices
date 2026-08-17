@@ -8,6 +8,8 @@ type Client = {
   id: string;
   name: string;
   company: string | null;
+  email?: string | null;
+  phone?: string | null;
 };
 
 type TemplateOption = {
@@ -72,6 +74,8 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, defaultClie
     : "";
 
   const [clientName, setClientName] = useState(initialClientName);
+  const [clientEmail, setClientEmail] = useState(initialClient?.email || "");
+  const [clientPhone, setClientPhone] = useState(initialClient?.phone || "");
   const [selectedClientId, setSelectedClientId] = useState(
     invoice?.clientId || presetClient?.id || ""
   );
@@ -146,6 +150,8 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, defaultClie
   function selectClient(client: Client) {
     setClientName(client.company || client.name);
     setSelectedClientId(client.id);
+    setClientEmail(client.email || "");
+    setClientPhone(client.phone || "");
     setShowSuggestions(false);
     setActiveSuggestion(-1);
   }
@@ -155,6 +161,8 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, defaultClie
       setShowSuggestions(false);
       if (exactMatch && !selectedClientId) {
         setSelectedClientId(exactMatch.id);
+        if (!clientEmail.trim()) setClientEmail(exactMatch.email || "");
+        if (!clientPhone.trim()) setClientPhone(exactMatch.phone || "");
       }
     }, 150);
   }
@@ -232,6 +240,8 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, defaultClie
     const payload = {
       clientId: payloadClientId || undefined,
       clientName: payloadClientName,
+      clientEmail: clientEmail.trim(),
+      clientPhone: clientPhone.trim(),
       status,
       issueDate,
       dueDate,
@@ -329,6 +339,28 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, defaultClie
                   </div>
                 )}
             </div>
+          </div>
+          <div className="field">
+            <label htmlFor="clientEmail">Client email</label>
+            <input
+              id="clientEmail"
+              type="email"
+              value={clientEmail}
+              onChange={(e) => setClientEmail(e.target.value)}
+              placeholder="invoice will be emailed here"
+              autoComplete="off"
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="clientPhone">Client phone</label>
+            <input
+              id="clientPhone"
+              type="tel"
+              value={clientPhone}
+              onChange={(e) => setClientPhone(e.target.value)}
+              placeholder="+249 9… (WhatsApp)"
+              autoComplete="off"
+            />
           </div>
           <div className="field">
             <label htmlFor="subject">Subject</label>

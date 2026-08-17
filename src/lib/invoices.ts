@@ -22,6 +22,8 @@ export const invoiceSchema = z
   .object({
     clientId: z.string().min(1).optional(),
     clientName: z.string().min(1).optional(),
+    clientEmail: z.string().email().optional().or(z.literal("")),
+    clientPhone: z.string().optional().or(z.literal("")),
     number: z.string().min(1).optional(),
     status: z.enum(invoiceStatuses).default("draft"),
     issueDate: z.string().min(1),

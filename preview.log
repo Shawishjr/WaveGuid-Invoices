@@ -86,3 +86,16 @@
  ○ Compiling /login ...
  ✓ Compiled /login in 2.5s (848 modules)
  GET /login?callbackUrl=%2F 200 in 6132ms
+ ○ Compiling /invoices/new ...
+ ✓ Compiled /invoices/new in 640ms (874 modules)
+ GET /invoices/new?clientId=cmsn6cnks0000tnr087vbnagc 200 in 1363ms
+ ✓ Compiled in 1250ms (874 modules)
+ ✓ Compiled in 568ms (874 modules)
+ ✓ Compiled in 427ms (874 modules)
+ ✓ Compiled in 560ms (874 modules)
+ ✓ Compiled in 562ms (874 modules)
+ ✓ Compiled in 487ms (874 modules)
+ ✓ Compiled in 423ms (874 modules)
+ ✓ Compiled /login in 496ms (640 modules)
+ GET /login?callbackUrl=%2Finvoices%2Fnew 200 in 1004ms
+ GET /login?callbackUrl=%2Fclients 200 in 96ms
