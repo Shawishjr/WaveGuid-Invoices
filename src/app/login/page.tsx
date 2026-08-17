@@ -33,7 +33,6 @@ export default async function LoginPage({
               name="email"
               type="email"
               placeholder="you@company.com"
-              defaultValue="admin@waveguid.com"
               required
             />
           </div>
@@ -45,7 +44,6 @@ export default async function LoginPage({
               name="password"
               type="password"
               placeholder="••••••••"
-              defaultValue="password123"
               required
             />
           </div>
@@ -61,10 +59,6 @@ export default async function LoginPage({
             Sign in
           </button>
         </form>
-
-        <p className="login-footer">
-          Demo: <strong>admin@waveguid.com</strong> / <strong>password123</strong>
-        </p>
       </div>
     </div>
   );

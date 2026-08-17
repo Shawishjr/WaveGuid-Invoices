@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDate, formatMoney } from "@/lib/invoices";
 import { StatusBadge } from "@/components/StatusBadge";
 import { InvoiceActions } from "@/components/InvoiceActions";
+import { PaymentManager } from "@/components/PaymentManager";
 
 export const dynamic = "force-dynamic";
 
@@ -14,15 +15,24 @@ export default async function InvoiceDetailPage({ params }: Props) {
   const [invoice, company] = await Promise.all([
     prisma.invoice.findUnique({
       where: { id },
-      include: { client: true, items: true },
+      include: { client: true, items: true, payments: true },
     }),
     prisma.companySettings.findFirst(),
   ]);
 
   if (!invoice) notFound();
 
+  const payments = [...invoice.payments].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const amountDue = Math.max(
+    0,
+    Math.round((invoice.total - invoice.paidAmount) * 100) / 100
+  );
+
   return (
-    <div className="detail-layout">
+    <>
+      <div className="detail-layout">
       <article className="invoice-sheet">
         <header>
           <div>
@@ -105,6 +115,18 @@ export default async function InvoiceDetailPage({ params }: Props) {
             <span>Total</span>
             <span>{formatMoney(invoice.total, invoice.currency)}</span>
           </div>
+          {invoice.paidAmount > 0 && (
+            <div>
+              <span>Paid</span>
+              <span>-{formatMoney(invoice.paidAmount, invoice.currency)}</span>
+            </div>
+          )}
+          {invoice.paidAmount > 0 && (
+            <div className="grand">
+              <span>Amount due</span>
+              <span>{formatMoney(amountDue, invoice.currency)}</span>
+            </div>
+          )}
         </div>
 
         {invoice.notes && (
@@ -122,6 +144,22 @@ export default async function InvoiceDetailPage({ params }: Props) {
         </p>
         <InvoiceActions id={invoice.id} />
       </aside>
-    </div>
+      </div>
+
+      <PaymentManager
+        invoiceId={invoice.id}
+        invoiceStatus={invoice.status}
+        currency={invoice.currency}
+        total={invoice.total}
+        paidAmount={invoice.paidAmount}
+        payments={payments.map((p) => ({
+          id: p.id,
+          amount: p.amount,
+          date: p.date.toISOString(),
+          method: p.method,
+          note: p.note,
+        }))}
+      />
+    </>
   );
 }

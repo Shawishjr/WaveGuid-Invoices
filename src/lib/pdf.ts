@@ -1,4 +1,5 @@
-import puppeteer, { type Browser } from "puppeteer";
+import { existsSync } from "fs";
+import puppeteer, { type Browser } from "puppeteer-core";
 import { formatDate, formatMoney, VAT_RATE } from "./invoices";
 import {
   PAGE_HEIGHT,
@@ -272,12 +273,38 @@ function buildHtml(elements: TemplateElement[], data: TemplateData): string {
 
 let browserPromise: Promise<Browser> | null = null;
 
+const LOCAL_BROWSER_CANDIDATES = [
+  process.env.CHROME_PATH,
+  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+  "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+].filter((p): p is string => Boolean(p));
+
 async function getBrowser(): Promise<Browser> {
   if (!browserPromise) {
-    browserPromise = puppeteer.launch({
-      headless: "shell",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    browserPromise = (async () => {
+      if (process.platform === "win32") {
+        const executablePath = LOCAL_BROWSER_CANDIDATES.find((p) => existsSync(p));
+        if (!executablePath) {
+          throw new Error(
+            "No Chrome/Edge installation found. Install Chrome or set CHROME_PATH."
+          );
+        }
+        return puppeteer.launch({
+          headless: true,
+          executablePath,
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        });
+      }
+      // Serverless (Vercel etc.): use the bundled headless-shell from @sparticuz/chromium
+      const { default: chromium } = await import("@sparticuz/chromium");
+      return puppeteer.launch({
+        headless: "shell",
+        executablePath: await chromium.executablePath(),
+        args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    })();
   }
   return browserPromise;
 }

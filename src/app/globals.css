@@ -1981,3 +1981,66 @@ tr:hover td {
   line-height: 1;
 }
 
+/* ---------- Payments ---------- */
+
+.payments-progress {
+  padding: 18px 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.payments-progress-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.payments-progress-label {
+  font-weight: 700;
+  color: var(--ink);
+  font-family: var(--font-display);
+}
+
+.payments-progress-remaining {
+  color: var(--warn);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.payments-progress-remaining.is-zero {
+  color: var(--success);
+}
+
+.payments-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.payments-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.35s ease;
+}
+
+.payments-table th,
+.payments-table td {
+  vertical-align: middle;
+}
+
+.payments-note-cell {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-amounts {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+

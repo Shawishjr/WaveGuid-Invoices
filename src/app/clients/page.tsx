@@ -18,6 +18,7 @@ export default async function ClientsPage() {
           dueDate: true,
           status: true,
           total: true,
+          paidAmount: true,
           currency: true,
         },
       },
@@ -28,7 +29,10 @@ export default async function ClientsPage() {
     const outstanding = client.invoices.filter((inv) =>
       OUTSTANDING_STATUSES.includes(inv.status)
     );
-    const owed = outstanding.reduce((sum, inv) => sum + inv.total, 0);
+    const owed = outstanding.reduce(
+      (sum, inv) => sum + Math.max(0, inv.total - inv.paidAmount),
+      0
+    );
     const owedCurrency = outstanding[0]?.currency ?? client.invoices[0]?.currency ?? "USD";
 
     return {

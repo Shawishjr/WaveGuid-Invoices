@@ -33,11 +33,15 @@ model Invoice {
   taxAmount     Float         @default(0)
   vatAmount     Float         @default(0)
   total         Float         @default(0)
+  paidAmount    Float         @default(0)
   clientId      String
   client        Client        @relation(fields: [clientId], references: [id])
   templateId    String?
   template      InvoiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  whatsappSentAt DateTime?
+  emailSentAt    DateTime?
   items         InvoiceItem[]
+  payments      Payment[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -50,6 +54,18 @@ model InvoiceItem {
   amount      Float
   invoiceId   String
   invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  amount    Float
+  date      DateTime @default(now())
+  method    String?
+  note      String?
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CompanySettings {

@@ -86,7 +86,7 @@ export default async function DashboardPage() {
     prisma.invoice.groupBy({
       by: ["status"],
       _count: { status: true },
-      _sum: { total: true },
+      _sum: { total: true, paidAmount: true },
     }),
     prisma.invoice.findMany({
       include: { client: true },
@@ -109,9 +109,13 @@ export default async function DashboardPage() {
 
   const totalInvoices = statusGroups.reduce((sum, group) => sum + group._count.status, 0);
   const totalRevenue = statusGroups.reduce((sum, group) => sum + (group._sum.total ?? 0), 0);
-  const paidAmount = stats.paid.total;
-  const overdueAmount = stats.overdue.total;
-  const outstandingAmount = stats.sent.total + stats.overdue.total;
+  const outstandingAmount = Math.max(
+    0,
+    stats.sent.total + stats.overdue.total -
+      ((statusGroups
+        .filter((g) => g.status === "sent" || g.status === "overdue")
+        .reduce((sum, g) => sum + (g._sum.paidAmount ?? 0), 0)) ?? 0)
+  );
 
   return (
     <>

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isEmailConfigured, sendInvoiceEmail } from "@/lib/email";
+import { isWhatsappConfigured, sendInvoicePdf } from "@/lib/whatsapp";
 
 export async function GET() {
   const invoices = await prisma.invoice.findMany({
@@ -73,7 +75,37 @@ export async function POST(request: Request) {
       include: { client: true, items: true },
     });
 
-    return NextResponse.json(invoice, { status: 201 });
+    // Automatically deliver the invoice PDF via email and/or WhatsApp
+    // (whichever channels are configured and the client has contact info for)
+    const [email, whatsapp] = await Promise.all([
+      isEmailConfigured() && invoice.client.email
+        ? sendInvoiceEmail(invoice.id, invoice.client.email)
+        : Promise.resolve({
+            ok: false,
+            error: !isEmailConfigured()
+              ? "Email not configured"
+              : "Client has no email address",
+          }),
+      isWhatsappConfigured() && invoice.client.phone
+        ? sendInvoicePdf(invoice.id, invoice.client.phone)
+        : Promise.resolve({
+            ok: false,
+            error: !isWhatsappConfigured()
+              ? "WhatsApp not configured"
+              : "Client has no phone number",
+          }),
+    ]);
+
+    return NextResponse.json(
+      {
+        ...invoice,
+        delivery: {
+          email: { sent: email.ok, error: email.error },
+          whatsapp: { sent: whatsapp.ok, error: whatsapp.error },
+        },
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json(
