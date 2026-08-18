@@ -1,4 +1,5 @@
 import { existsSync } from "fs";
+import chromium from "@sparticuz/chromium";
 import puppeteer, { type Browser } from "puppeteer-core";
 import { formatDate, formatMoney, VAT_RATE } from "./invoices";
 import {
@@ -298,7 +299,6 @@ async function getBrowser(): Promise<Browser> {
         });
       }
       // Serverless (Vercel etc.): use the bundled headless-shell from @sparticuz/chromium
-      const { default: chromium } = await import("@sparticuz/chromium");
       return puppeteer.launch({
         headless: "shell",
         executablePath: await chromium.executablePath(),
