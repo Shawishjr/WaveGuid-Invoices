@@ -5,6 +5,8 @@ const nextConfig = {
     "@prisma/adapter-libsql",
     "@libsql/client",
     "libsql",
+    "puppeteer-core",
+    "@sparticuz/chromium",
   ],
 };
 
