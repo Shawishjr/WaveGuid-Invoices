@@ -133,3 +133,11 @@
  ✓ Compiled /dashboard in 393ms (884 modules)
  POST /dashboard 200 in 1115ms
  GET /dashboard 200 in 190ms
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.22
+   - Local:        http://localhost:3001
+   - Network:      http://0.0.0.0:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 7.9s

@@ -62,7 +62,7 @@ export default async function SettingsPage() {
       </section>
 
       {/* Profile */}
-      <section className="panel" style={{ marginBottom: 24 }}>
+      <section id="profile" className="panel" style={{ marginBottom: 24, scrollMarginTop: 24 }}>
         <div className="panel-header">
           <h3>My profile</h3>
         </div>

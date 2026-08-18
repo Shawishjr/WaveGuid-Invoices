@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogoutButton } from "./LogoutButton";
 
 export default function AppShell({
@@ -22,6 +22,29 @@ export default function AppShell({
   const [isOpen, setIsOpen] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [searchTerm, setSearchTerm] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("waveguid-theme") as "light" | "dark" | null;
@@ -184,23 +207,81 @@ export default function AppShell({
                 )}
               </button>
 
-              <Link href="/settings" className="user-chip" aria-label="Open settings">
-                <div className="user-avatar">
-                  {userImage ? (
-                    <img
-                      src={userImage}
-                      alt={userName?.trim() || "Account"}
-                      className="user-avatar-img"
-                    />
-                  ) : (
-                    (userName?.trim() || "A").charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className="user-copy">
-                  <strong>{userName?.trim() || "Admin"}</strong>
-                  <span>Settings</span>
-                </div>
-              </Link>
+              <div className="user-menu" ref={menuRef}>
+                <button
+                  type="button"
+                  className="user-chip"
+                  onClick={() => setMenuOpen((value) => !value)}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-label="Open account menu"
+                >
+                  <div className="user-avatar">
+                    {userImage ? (
+                      <img
+                        src={userImage}
+                        alt={userName?.trim() || "Account"}
+                        className="user-avatar-img"
+                      />
+                    ) : (
+                      (userName?.trim() || "A").charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="user-copy">
+                    <strong>{userName?.trim() || "Admin"}</strong>
+                    <span>Account</span>
+                  </div>
+                  <svg
+                    className={`user-menu-chevron${menuOpen ? " is-open" : ""}`}
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+
+                {menuOpen && (
+                  <div className="user-dropdown" role="menu">
+                    <Link href="/settings#profile" className="user-dropdown-item" role="menuitem">
+                      <span aria-hidden>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </span>
+                      <span>Profile</span>
+                    </Link>
+                    <Link href="/settings" className="user-dropdown-item" role="menuitem">
+                      <span aria-hidden>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="3" />
+                          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                      </span>
+                      <span>Settings</span>
+                    </Link>
+                    <form action="/api/auth/logout" method="POST">
+                      <button type="submit" className="user-dropdown-item user-dropdown-logout" role="menuitem">
+                        <span aria-hidden>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                          </svg>
+                        </span>
+                        <span>Log out</span>
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
             </div>
           </header>
         )}
