@@ -1,14 +1,19 @@
 import { z } from "zod";
 import { roundMoney } from "./invoices";
 
-export const PAYMENT_METHODS = [
-  "Cash",
-  "Bank transfer",
-  "Card",
-  "Cheque",
-  "Online",
-  "Other",
+export const PAYMENT_METHODS = ["Cash", "Bank transfer"] as const;
+
+/** Allowed proof/receipt attachment types: pictures and PDF only */
+export const PROOF_MIME_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
 ] as const;
+
+/** Base64 payload cap (~3 MB file -> ~4 MB base64), keeps requests within serverless limits */
+export const PROOF_MAX_BASE64_LENGTH = 4 * 1024 * 1024;
 
 export const paymentSchema = z.object({
   amount: z.coerce
@@ -16,9 +21,44 @@ export const paymentSchema = z.object({
     .positive("Amount must be greater than zero")
     .refine((v) => roundMoney(v) === v, "Max 2 decimal places"),
   date: z.string().min(1, "Date is required"),
-  method: z.string().optional().nullable(),
+  method: z.enum(PAYMENT_METHODS).optional().nullable(),
   note: z.string().optional().nullable(),
+  proofData: z
+    .string()
+    .refine(
+      (v) =>
+        !v ||
+        new RegExp(
+          `^data:(${PROOF_MIME_TYPES.join("|").replace(/\//g, "\\/")});base64,[A-Za-z0-9+/=]+$`
+        ).test(v),
+      "Proof must be a base64 data URL (picture or PDF only)"
+    )
+    .refine(
+      (v) => !v || v.length <= PROOF_MAX_BASE64_LENGTH,
+      "Proof file is too large (max ~3 MB)"
+    )
+    .optional()
+    .nullable(),
+  proofMime: z
+    .string()
+    .refine(
+      (v) => !v || (PROOF_MIME_TYPES as readonly string[]).includes(v),
+      "Only pictures (PNG, JPEG, WebP, GIF) and PDF files are allowed"
+    )
+    .optional()
+    .nullable(),
+  proofName: z.string().max(200).optional().nullable(),
 });
+
+/** Strips the data URL down to raw base64 + mime for storage */
+export function parseProofDataUrl(dataUrl: string): {
+  base64: string;
+  mime: string;
+} | null {
+  const match = /^data:([^;]+);base64,([\s\S]*)$/.exec(dataUrl);
+  if (!match) return null;
+  return { mime: match[1], base64: match[2] };
+}
 
 export type PaymentInput = z.infer<typeof paymentSchema>;
 

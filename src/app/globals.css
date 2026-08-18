@@ -359,6 +359,33 @@ textarea {
   background: var(--danger-soft);
 }
 
+/* ---------- Payment proof preview (browser preview only, no download) ---------- */
+
+.proof-preview {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  border-radius: 12px;
+  margin: 0 4px 4px;
+}
+
+.proof-image {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+}
+
+.proof-frame {
+  width: 100%;
+  height: 70vh;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+}
+
 .sidebar-link {
   display: flex;
   align-items: center;
@@ -2133,5 +2160,81 @@ tr:hover td {
   display: flex;
   gap: 6px;
   margin-top: 2px;
+}
+
+/* ---------- Route loader ---------- */
+
+.route-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 247, 254, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: route-loader-fade 0.18s ease both;
+}
+
+:root[data-theme="dark"] .route-loader {
+  background: rgba(10, 20, 17, 0.78);
+}
+
+.route-loader-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.route-loader-logo {
+  width: min(280px, 62vw);
+  height: auto;
+  animation: route-loader-flash 0.9s ease-in-out infinite;
+}
+
+.route-loader-logo-dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .route-loader-logo-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .route-loader-logo-dark {
+  display: block;
+}
+
+@keyframes route-loader-flash {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes route-loader-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-loader {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .route-loader-logo,
+  .route-loader {
+    animation: none;
+  }
 }
 

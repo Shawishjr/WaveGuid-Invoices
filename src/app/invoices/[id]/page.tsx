@@ -158,6 +158,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
           date: p.date.toISOString(),
           method: p.method,
           note: p.note,
+          proofMime: p.proofMime,
+          proofName: p.proofName,
         }))}
       />
     </>

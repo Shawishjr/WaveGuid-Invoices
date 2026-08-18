@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { paymentSchema, recalcInvoicePayments } from "@/lib/payments";
+import {
+  parseProofDataUrl,
+  paymentSchema,
+  recalcInvoicePayments,
+} from "@/lib/payments";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -38,12 +42,17 @@ export async function POST(request: Request, { params }: Params) {
       );
     }
 
+    const proof = data.proofData ? parseProofDataUrl(data.proofData) : null;
+
     const payment = await prisma.payment.create({
       data: {
         amount: data.amount,
         date: new Date(data.date),
         method: data.method || null,
         note: data.note || null,
+        proofData: proof ? proof.base64 : null,
+        proofMime: proof ? proof.mime : null,
+        proofName: data.proofName || null,
         invoiceId: id,
       },
     });

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { paymentSchema, recalcInvoicePayments } from "@/lib/payments";
+import {
+  parseProofDataUrl,
+  paymentSchema,
+  recalcInvoicePayments,
+} from "@/lib/payments";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -44,6 +48,10 @@ export async function PUT(request: Request, { params }: Params) {
       );
     }
 
+    const proof = data.proofData ? parseProofDataUrl(data.proofData) : null;
+    // proofData === "" (empty string) means "remove the attached proof"
+    const removeProof = data.proofData === "";
+
     const payment = await prisma.payment.update({
       where: { id },
       data: {
@@ -51,6 +59,15 @@ export async function PUT(request: Request, { params }: Params) {
         date: new Date(data.date),
         method: data.method || null,
         note: data.note || null,
+        ...(removeProof
+          ? { proofData: null, proofMime: null, proofName: null }
+          : proof
+            ? {
+                proofData: proof.base64,
+                proofMime: proof.mime,
+                proofName: data.proofName || null,
+              }
+            : {}),
       },
     });
 

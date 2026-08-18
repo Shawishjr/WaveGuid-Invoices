@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LogoutButton } from "./LogoutButton";
+import { startRouteLoader } from "./RouteLoader";
 
 export default function AppShell({
   children,
@@ -67,6 +68,7 @@ export default function AppShell({
     event.preventDefault();
     const trimmed = searchTerm.trim();
     if (!trimmed) return;
+    startRouteLoader();
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   }
 
@@ -130,6 +132,15 @@ export default function AppShell({
               </span>
               <span>Reports</span>
             </Link>
+            <Link className={`sidebar-link${isActive("/payments") ? " is-active" : ""}`} href="/payments">
+              <span aria-hidden>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+              </span>
+              <span>Payments</span>
+            </Link>
             <Link className={`sidebar-link${isActive("/templates") ? " is-active" : ""}`} href="/templates">
               <span aria-hidden>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -140,6 +151,18 @@ export default function AppShell({
                 </svg>
               </span>
               <span>PDF templates</span>
+            </Link>
+            <Link className={`sidebar-link${isActive("/currency-rate") ? " is-active" : ""}`} href="/currency-rate">
+              <span aria-hidden>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M8.5 8.5h5.5a2.5 2.5 0 0 1 0 5H9.5" />
+                  <path d="M11 13.5 9.5 15.5" />
+                  <path d="M11 6.5v2" />
+                  <path d="M9.5 15.5h4" />
+                </svg>
+              </span>
+              <span>Currency rate</span>
             </Link>
             <Link className="sidebar-link sidebar-link-primary" href="/invoices/new">
               <span aria-hidden>

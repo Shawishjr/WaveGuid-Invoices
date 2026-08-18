@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/invoices";
-import { PAYMENT_METHODS } from "@/lib/payments";
+import { PAYMENT_METHODS, PROOF_MIME_TYPES } from "@/lib/payments";
 
 type Payment = {
   id: string;
@@ -11,6 +11,8 @@ type Payment = {
   date: string;
   method: string | null;
   note: string | null;
+  proofMime?: string | null;
+  proofName?: string | null;
 };
 
 type Props = {
@@ -27,7 +29,12 @@ type FormShape = {
   date: string;
   method: string;
   note: string;
+  proofData: string | null; // null = none, "" = remove existing, data URL = new file
+  proofName: string | null;
+  proofMime: string | null;
 };
+
+const MAX_PROOF_BYTES = 3 * 1024 * 1024;
 
 function toInputDate(value: string) {
   return value.slice(0, 10);
@@ -50,6 +57,9 @@ const emptyForm: FormShape = {
   date: "",
   method: "",
   note: "",
+  proofData: null,
+  proofName: null,
+  proofMime: null,
 };
 
 export function PaymentManager({
@@ -64,6 +74,7 @@ export function PaymentManager({
 
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
+  const [previewing, setPreviewing] = useState<Payment | null>(null);
   const [form, setForm] = useState<FormShape>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,8 +100,54 @@ export function PaymentManager({
       date: toInputDate(payment.date),
       method: payment.method || "",
       note: payment.note || "",
+      proofData: null,
+      proofName: payment.proofName || null,
+      proofMime: payment.proofMime || null,
     });
     setError(null);
+  }
+
+  function handleProofFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!(PROOF_MIME_TYPES as readonly string[]).includes(file.type)) {
+      setError("Only pictures (PNG, JPEG, WebP, GIF) and PDF files are allowed.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > MAX_PROOF_BYTES) {
+      setError("File is too large — maximum 3 MB.");
+      event.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((f) =>
+        f
+          ? {
+              ...f,
+              proofData: String(reader.result),
+              proofName: file.name,
+              proofMime: file.type,
+            }
+          : f
+      );
+      setError(null);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeProof() {
+    setForm((f) =>
+      f
+        ? {
+            ...f,
+            proofData: editing?.proofMime ? "" : null,
+            proofName: null,
+            proofMime: null,
+          }
+        : f
+    );
   }
 
   function closeModal() {
@@ -124,6 +181,9 @@ export function PaymentManager({
         date: form.date,
         method: form.method || null,
         note: form.note || null,
+        proofData: form.proofData ?? undefined,
+        proofName:
+          form.proofData && form.proofData !== "" ? form.proofName : undefined,
       };
       const res = await fetch(
         editing ? `/api/payments/${editing.id}` : `/api/invoices/${invoiceId}/payments`,
@@ -212,24 +272,41 @@ export function PaymentManager({
       ) : (
         <div className="table-wrap">
           <table className="payments-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Method</th>
-                <th>Note</th>
-                <th style={{ width: 180 }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((payment) => (
-                <tr key={payment.id}>
-                  <td>{formatDate(payment.date)}</td>
-                  <td>
-                    <strong>{formatMoney(payment.amount, currency)}</strong>
-                  </td>
-                  <td>{payment.method || "—"}</td>
-                  <td className="payments-note-cell">{payment.note || "—"}</td>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Note</th>
+                  <th>Receipt</th>
+                  <th style={{ width: 180 }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((payment) => (
+                  <tr key={payment.id}>
+                    <td>{formatDate(payment.date)}</td>
+                    <td>
+                      <strong>{formatMoney(payment.amount, currency)}</strong>
+                    </td>
+                    <td>{payment.method || "—"}</td>
+                    <td className="payments-note-cell">{payment.note || "—"}</td>
+                    <td>
+                      {payment.proofMime ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => setPreviewing(payment)}
+                          title="Preview receipt"
+                        >
+                          {payment.proofMime === "application/pdf"
+                            ? "View PDF"
+                            : "View picture"}
+                        </button>
+                      ) : (
+                        <span style={{ color: "var(--muted)" }}>—</span>
+                      )}
+                    </td>
                   <td>
                     <div className="row-actions">
                       <button
@@ -343,6 +420,40 @@ export function PaymentManager({
                     placeholder="Optional — e.g. upfront 50%"
                   />
                 </div>
+                <div className="field full">
+                  <label>
+                    Transfer receipt (picture or PDF, max 3 MB)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
+                    onChange={handleProofFile}
+                  />
+                  {(form.proofName || editing?.proofName) && (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        display: "flex",
+                        gap: 10,
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <span style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
+                        {form.proofData
+                          ? "New file ready to upload"
+                          : `Attached: ${editing?.proofName}`}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={removeProof}
+                      >
+                        Remove receipt
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {error && <p className="error">{error}</p>}
@@ -356,6 +467,47 @@ export function PaymentManager({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Preview-only receipt viewer */}
+      {previewing && (
+        <div className="modal-backdrop" onClick={() => setPreviewing(null)}>
+          <div className="modal-card modal-wide" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3>Transfer receipt</h3>
+                <p style={{ margin: "6px 0 0", color: "var(--muted)" }}>
+                  {formatMoney(previewing.amount, currency)} ·{" "}
+                  {formatDate(previewing.date)}
+                  {previewing.proofName ? ` · ${previewing.proofName}` : ""}
+                </p>
+              </div>
+              <button
+                className="btn btn-ghost"
+                type="button"
+                onClick={() => setPreviewing(null)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="proof-preview">
+              {previewing.proofMime === "application/pdf" ? (
+                <iframe
+                  src={`/api/payments/${previewing.id}/proof`}
+                  title="Receipt PDF"
+                  className="proof-frame"
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`/api/payments/${previewing.id}/proof`}
+                  alt="Receipt"
+                  className="proof-image"
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

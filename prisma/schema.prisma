@@ -62,6 +62,9 @@ model Payment {
   date      DateTime @default(now())
   method    String?
   note      String?
+  proofData String?  // base64-encoded receipt/transfer proof (picture or PDF)
+  proofMime String?  // e.g. image/png, application/pdf
+  proofName String?  // original filename
   invoiceId String
   invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -77,6 +80,12 @@ model CompanySettings {
   website          String?
   logoUrl          String?
   defaultTemplateId String?
+}
+
+model CurrencyRate {
+  id        String   @id @default(cuid())
+  usdToSdg  Float    @default(601)
+  updatedAt DateTime @updatedAt
 }
 
 model User {
