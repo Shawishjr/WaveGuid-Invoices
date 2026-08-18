@@ -99,3 +99,25 @@
  ✓ Compiled /login in 496ms (640 modules)
  GET /login?callbackUrl=%2Finvoices%2Fnew 200 in 1004ms
  GET /login?callbackUrl=%2Fclients 200 in 96ms
+[preview] Tue 08/18/2026 16:54:40.27 - starting Next.js dev server 
+[preview] URL: http://localhost:3001 
+[preview] Log:  E:\Project\WAVE\WaveGuid-Invoices\preview.log 
+[preview] (Ctrl+C to stop, then run:  subst W: /D) 
+ 
+
+> waveguid-invoices@0.1.0 dev
+> next dev --hostname 0.0.0.0 --port 3001
+
+   ▲ Next.js 15.5.22
+   - Local:        http://localhost:3001
+   - Network:      http://0.0.0.0:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 14.5s
+ ○ Compiling /login ...
+ ✓ Compiled /login in 2s (682 modules)
+ GET /login 200 in 5335ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1027ms (623 modules)
+ GET /login?callbackUrl=%2FWAVELOGO.svg 200 in 376ms
