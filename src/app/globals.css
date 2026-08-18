@@ -1569,6 +1569,18 @@ tr:hover td {
   height: auto;
 }
 
+.login-brand .brand-logo-dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .login-brand .brand-logo-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .login-brand .brand-logo-dark {
+  display: block;
+}
+
 .login-brand h1 {
   margin: 0;
   font-family: var(--font-display);

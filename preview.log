@@ -314,3 +314,36 @@
  GET /clients 200 in 74ms
  GET /invoices 200 in 91ms
  GET /dashboard 200 in 132ms
+ ○ Compiling /templates ...
+ ✓ Compiled /templates in 1258ms (968 modules)
+ GET /templates 200 in 1718ms
+ GET /dashboard 200 in 159ms
+ ✓ Compiled in 649ms (677 modules)
+ ✓ Compiled in 1766ms (947 modules)
+ GET /dashboard 200 in 375ms
+ ○ Compiling /api/auth/logout ...
+ ✓ Compiled /api/auth/logout in 729ms (951 modules)
+ POST /api/auth/logout 307 in 977ms
+[?25h
+[preview] Wed 08/19/2026  0:47:41.79 - starting Next.js dev server 
+[preview] URL: http://localhost:3001 
+[preview] Log:  E:\Project\WAVE\WaveGuid-Invoices\preview.log 
+[preview] (Ctrl+C to stop, then run:  subst W: /D) 
+ 
+
+> waveguid-invoices@0.1.0 dev
+> next dev --hostname 0.0.0.0 --port 3001
+
+   ▲ Next.js 15.5.22
+   - Local:        http://localhost:3001
+   - Network:      http://0.0.0.0:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 3.3s
+ ○ Compiling /login ...
+ ✓ Compiled /login in 5.8s (701 modules)
+ GET /login 200 in 6590ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1193ms (626 modules)
+ GET /login?callbackUrl=%2F 200 in 356ms

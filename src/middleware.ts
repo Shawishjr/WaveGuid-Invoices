@@ -39,7 +39,8 @@ export const config = {
      * - favicon.ico (favicon file)
      * - login (public login page)
      * - api/auth (public auth API routes)
+     * - *.* (public static assets, e.g. WAVELOGO.svg, icon.svg)
      */
-    "/((?!_next/static|_next/image|favicon.ico|login|api/auth).*)",
+    "/((?!_next/static|_next/image|favicon.ico|login|api/auth|.*\\..*).*)",
   ],
 };

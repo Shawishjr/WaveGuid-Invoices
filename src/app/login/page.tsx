@@ -12,7 +12,8 @@ export default async function LoginPage({
       <div className="login-card">
         <div className="login-badge">Secure access</div>
         <div className="login-brand">
-          <img src="/WAVELOGO.svg" alt="WaveGuid logo" className="brand-logo" />
+          <img src="/WAVELOGO.svg" alt="WaveGuid logo" className="brand-logo brand-logo-light" />
+          <img src="/LOGODARK.SVG" alt="WaveGuid logo" className="brand-logo brand-logo-dark" />
         </div>
         <h2>Welcome back</h2>
         <p className="login-sub">
