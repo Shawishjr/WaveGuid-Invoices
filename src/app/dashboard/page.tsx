@@ -1,17 +1,15 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDate, formatMoney } from "@/lib/invoices";
+import { formatDate, formatMoney, invoiceStatuses, STATUS_LABELS, type InvoiceStatus } from "@/lib/invoices";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-const STATUSES = ["draft", "sent", "paid", "overdue", "cancelled"] as const;
-
-type InvoiceStatus = (typeof STATUSES)[number];
+const STATUSES = invoiceStatuses;
 
 function formatStatusLabel(status: InvoiceStatus) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  return STATUS_LABELS[status];
 }
 
 function getGreeting(hour: number) {
@@ -31,45 +29,23 @@ const STATUS_CONFIG: Record<InvoiceStatus, { color: string; soft: string; icon: 
       </svg>
     ),
   },
-  sent: {
-    color: "#076C5F",
-    soft: "rgba(7, 108, 95, 0.12)",
+  partly_paid: {
+    color: "#FFB547",
+    soft: "rgba(255, 181, 71, 0.16)",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="22" y1="2" x2="11" y2="13" />
-        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none" />
       </svg>
     ),
   },
-  paid: {
+  fully_paid: {
     color: "#01B574",
     soft: "rgba(1, 181, 116, 0.14)",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
         <polyline points="22 4 12 14.01 9 11.01" />
-      </svg>
-    ),
-  },
-  overdue: {
-    color: "#FFB547",
-    soft: "rgba(255, 181, 71, 0.16)",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    ),
-  },
-  cancelled: {
-    color: "#EE5D50",
-    soft: "rgba(238, 93, 80, 0.16)",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="15" y1="9" x2="9" y2="15" />
-        <line x1="9" y1="9" x2="15" y2="15" />
       </svg>
     ),
   },
@@ -111,10 +87,13 @@ export default async function DashboardPage() {
   const totalRevenue = statusGroups.reduce((sum, group) => sum + (group._sum.total ?? 0), 0);
   const outstandingAmount = Math.max(
     0,
-    stats.sent.total + stats.overdue.total -
-      ((statusGroups
-        .filter((g) => g.status === "sent" || g.status === "overdue")
-        .reduce((sum, g) => sum + (g._sum.paidAmount ?? 0), 0)) ?? 0)
+    statusGroups
+      .filter((g) => g.status === "partly_paid")
+      .reduce(
+        (sum, g) =>
+          sum + Math.max(0, (g._sum.total ?? 0) - (g._sum.paidAmount ?? 0)),
+        0
+      )
   );
 
   return (
@@ -246,23 +225,23 @@ export default async function DashboardPage() {
         <div className="analytics-grid">
           <div className="analytics-card">
             <h4>Collection rate</h4>
-            <strong>{totalInvoices ? Math.round((stats.paid.count / totalInvoices) * 100) : 0}%</strong>
-            <span>{stats.paid.count} paid invoices</span>
+            <strong>{totalInvoices ? Math.round((stats.fully_paid.count / totalInvoices) * 100) : 0}%</strong>
+            <span>{stats.fully_paid.count} fully paid invoices</span>
           </div>
           <div className="analytics-card">
             <h4>Outstanding</h4>
             <strong>{formatMoney(outstandingAmount)}</strong>
-            <span>{stats.sent.count + stats.overdue.count} pending</span>
+            <span>{stats.partly_paid.count} partly paid</span>
           </div>
           <div className="analytics-card">
-            <h4>Overdue</h4>
-            <strong>{stats.overdue.count}</strong>
-            <span>{formatMoney(stats.overdue.total)}</span>
+            <h4>Fully paid</h4>
+            <strong>{stats.fully_paid.count}</strong>
+            <span>{formatMoney(stats.fully_paid.total)}</span>
           </div>
           <div className="analytics-card">
             <h4>Drafts</h4>
             <strong>{stats.draft.count}</strong>
-            <span>Ready to send</span>
+            <span>{formatMoney(stats.draft.total)}</span>
           </div>
         </div>
       </section>

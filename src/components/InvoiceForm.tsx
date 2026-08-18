@@ -380,10 +380,8 @@ export function InvoiceForm({ clients, templates, defaultTemplateId, defaultClie
               onChange={(e) => setStatus(e.target.value)}
             >
               <option value="draft">Draft</option>
-              <option value="sent">Sent</option>
-              <option value="paid">Paid</option>
-              <option value="overdue">Overdue</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="partly_paid">Partly paid</option>
+              <option value="fully_paid">Fully paid</option>
             </select>
           </div>
           <div className="field">

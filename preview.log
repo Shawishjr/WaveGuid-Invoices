@@ -347,3 +347,53 @@
  ○ Compiling /middleware ...
  ✓ Compiled /middleware in 1193ms (626 modules)
  GET /login?callbackUrl=%2F 200 in 356ms
+ ✓ Compiled in 753ms (867 modules)
+ GET /login?callbackUrl=%2F 200 in 345ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 626ms (869 modules)
+ POST /api/auth/login 307 in 919ms
+ POST /login?error=Email%20and%20password%20are%20required 200 in 364ms
+ GET /login?callbackUrl=%2Finvoices 200 in 104ms
+ GET /login?callbackUrl=%2Fdashboard 200 in 99ms
+ GET /login?callbackUrl=%2Freports 200 in 110ms
+ GET /login?callbackUrl=%2Fclients 200 in 117ms
+ POST /api/auth/login 307 in 30ms
+ POST /login?error=Email%20and%20password%20are%20required 200 in 111ms
+ POST /login?callbackUrl=%2Fapi%2Finvoices 200 in 109ms
+ GET /login?callbackUrl=%2Finvoices 200 in 116ms
+ POST /api/auth/login 307 in 64ms
+ POST /login?error=Email%20and%20password%20are%20required 200 in 144ms
+ POST /login?callbackUrl=%2Fapi%2Finvoices 200 in 92ms
+ POST /api/auth/login 307 in 155ms
+ POST /login?callbackUrl=%2Fapi%2Finvoices 200 in 93ms
+ GET /login?callbackUrl=%2Finvoices 200 in 94ms
+ ○ Compiling /api/invoices ...
+ ✓ Compiled /api/invoices in 1469ms (937 modules)
+ POST /api/invoices 201 in 5005ms
+ ○ Compiling /invoices ...
+ ✓ Compiled /invoices in 1085ms (971 modules)
+ GET /invoices 200 in 1692ms
+ ✓ Compiled /api/invoices/[id] in 432ms (973 modules)
+ PATCH /api/invoices/cmsz7rmzf0002tn248xycvgzi 200 in 9585ms
+ PATCH /api/invoices/cmsz7rmzf0002tn248xycvgzi 400 in 36ms
+ ✓ Compiled /api/invoices/[id]/payments in 508ms (974 modules)
+ POST /api/invoices/cmsz7rmzf0002tn248xycvgzi/payments 201 in 1934ms
+ GET /api/invoices/cmsz7rmzf0002tn248xycvgzi 200 in 50ms
+ POST /api/invoices/cmsz7rmzf0002tn248xycvgzi/payments 201 in 60ms
+ GET /api/invoices/cmsz7rmzf0002tn248xycvgzi 200 in 36ms
+ PATCH /api/invoices/cmsz7rmzf0002tn248xycvgzi 400 in 42ms
+ DELETE /api/invoices/cmsz7rmzf0002tn248xycvgzi 200 in 41ms
+ ✓ Compiled /api/auth/login in 365ms (658 modules)
+ POST /api/auth/login 307 in 756ms
+ ✓ Compiled / in 491ms (909 modules)
+ POST / 307 in 1008ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 589ms (916 modules)
+ POST /dashboard 200 in 1129ms
+ ○ Compiling /clients ...
+ ✓ Compiled /clients in 994ms (921 modules)
+ GET /clients 200 in 1236ms
+ ○ Compiling /currency-rate ...
+ ✓ Compiled /currency-rate in 739ms (941 modules)
+ GET /currency-rate 200 in 942ms
+ GET /currency-rate 200 in 62ms

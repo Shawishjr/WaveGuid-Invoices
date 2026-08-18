@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDate, formatMoney, invoiceStatuses } from "@/lib/invoices";
+import { formatDate, formatMoney, invoiceStatuses, STATUS_LABELS } from "@/lib/invoices";
 import { StatusBadge } from "@/components/StatusBadge";
 import { InvoiceRowActions } from "@/components/InvoiceRowActions";
 
@@ -36,7 +36,7 @@ export default async function InvoicesPage({ searchParams }: Props) {
   const chips = [
     { label: "All", value: null, count: totalInvoices },
     ...invoiceStatuses.map((s) => ({
-      label: s.charAt(0).toUpperCase() + s.slice(1),
+      label: STATUS_LABELS[s],
       value: s,
       count: countFor(s),
     })),
@@ -80,7 +80,7 @@ export default async function InvoicesPage({ searchParams }: Props) {
         {invoices.length === 0 ? (
           <div className="empty">
             {activeStatus
-              ? `No ${activeStatus} invoices.`
+              ? `No ${STATUS_LABELS[activeStatus as keyof typeof STATUS_LABELS] ?? activeStatus} invoices.`
               : "No invoices yet."}
           </div>
         ) : (
@@ -111,7 +111,13 @@ export default async function InvoicesPage({ searchParams }: Props) {
                     </td>
                     <td>{formatMoney(invoice.total, invoice.currency)}</td>
                     <td>
-                      <InvoiceRowActions id={invoice.id} />
+                      <InvoiceRowActions
+                        id={invoice.id}
+                        status={invoice.status}
+                        currency={invoice.currency}
+                        total={invoice.total}
+                        paidAmount={invoice.paidAmount}
+                      />
                     </td>
                   </tr>
                 ))}

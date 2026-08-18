@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { invoiceStatuses } from "@/lib/invoices";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -91,6 +92,40 @@ export async function PUT(request: Request, { params }: Params) {
     console.error(error);
     return NextResponse.json(
       { error: "Failed to update invoice" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request, { params }: Params) {
+  try {
+    const { id } = await params;
+    const body = await request.json().catch(() => null);
+    const status = body?.status;
+
+    if (
+      typeof status !== "string" ||
+      !(invoiceStatuses as readonly string[]).includes(status)
+    ) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+
+    const existing = await prisma.invoice.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    }
+
+    const invoice = await prisma.invoice.update({
+      where: { id },
+      data: { status },
+      include: { client: true, items: true },
+    });
+
+    return NextResponse.json(invoice);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Failed to update invoice status" },
       { status: 500 }
     );
   }

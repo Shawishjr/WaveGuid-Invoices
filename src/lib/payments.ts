@@ -84,9 +84,9 @@ type RecalcPrisma = {
 /**
  * Recalculate an invoice's paidAmount from its payments and keep the
  * status in sync:
- *   - fully paid            -> "paid"
- *   - no longer fully paid  -> back to "sent" (only if it was "paid")
- * Draft / cancelled invoices keep their status untouched.
+ *   - payments cover the total -> "fully_paid"
+ *   - some payments, not full  -> "partly_paid"
+ *   - no payments              -> "draft"
  */
 export async function recalcInvoicePayments(
   prisma: RecalcPrisma,
@@ -109,13 +109,13 @@ export async function recalcInvoicePayments(
 
   const data: { paidAmount: number; status?: string } = { paidAmount };
 
-  if (invoice.status !== "draft" && invoice.status !== "cancelled") {
-    const fullyPaid = paidAmount > 0 && paidAmount >= invoice.total - 0.005;
-    if (fullyPaid && invoice.status !== "paid") {
-      data.status = "paid";
-    } else if (!fullyPaid && invoice.status === "paid") {
-      data.status = "sent";
-    }
+  const fullyPaid = paidAmount > 0 && paidAmount >= invoice.total - 0.005;
+  if (fullyPaid && invoice.status !== "fully_paid") {
+    data.status = "fully_paid";
+  } else if (!fullyPaid && invoice.status === "fully_paid") {
+    data.status = paidAmount > 0 ? "partly_paid" : "draft";
+  } else if (paidAmount > 0 && invoice.status === "draft") {
+    data.status = "partly_paid";
   }
 
   await prisma.invoice.update({ where: { id: invoiceId }, data });

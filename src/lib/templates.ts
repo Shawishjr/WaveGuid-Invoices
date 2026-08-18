@@ -121,7 +121,7 @@ export const SAMPLE_DATA: TemplateData = {
   invoice: {
     number: "INV-1001",
     subject: "Website design services — Q3 retainer",
-    status: "sent",
+    status: "draft",
     issueDate: formatDate(new Date()),
     dueDate: formatDate(new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)),
     currency: "USD",

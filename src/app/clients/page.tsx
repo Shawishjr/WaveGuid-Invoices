@@ -3,7 +3,7 @@ import { ClientManager } from "@/components/ClientManager";
 
 export const dynamic = "force-dynamic";
 
-const OUTSTANDING_STATUSES = ["sent", "overdue"];
+const OUTSTANDING_STATUSES = ["partly_paid"];
 
 export default async function ClientsPage() {
   const clients = await prisma.client.findMany({

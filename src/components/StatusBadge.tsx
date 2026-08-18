@@ -1,3 +1,4 @@
 export function StatusBadge({ status }: { status: string }) {
-  return <span className={`badge badge-${status}`}>{status}</span>;
+  const label = status.replace(/_/g, " ");
+  return <span className={`badge badge-${status}`}>{label}</span>;
 }

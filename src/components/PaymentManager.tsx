@@ -17,7 +17,6 @@ type Payment = {
 
 type Props = {
   invoiceId: string;
-  invoiceStatus: string;
   currency: string;
   total: number;
   paidAmount: number;
@@ -64,7 +63,6 @@ const emptyForm: FormShape = {
 
 export function PaymentManager({
   invoiceId,
-  invoiceStatus,
   currency,
   total,
   paidAmount,
@@ -85,7 +83,6 @@ export function PaymentManager({
   );
   const progress = total > 0 ? Math.min(100, (paidAmount / total) * 100) : 0;
   const fullyPaid = remaining <= 0.005;
-  const locked = invoiceStatus === "cancelled";
 
   function openAdd() {
     setForm({ ...emptyForm, date: todayInput() });
@@ -237,7 +234,7 @@ export function PaymentManager({
     <section className="panel" style={{ marginBottom: 24 }}>
       <div className="panel-header">
         <h3>Payments</h3>
-        {!locked && !fullyPaid && (
+        {!fullyPaid && (
           <button className="btn btn-primary" type="button" onClick={openAdd}>
             + Record payment
           </button>

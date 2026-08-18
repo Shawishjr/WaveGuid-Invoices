@@ -779,24 +779,116 @@ tr:hover td {
   color: var(--muted);
 }
 
-.badge-sent {
-  background: var(--accent-soft);
-  color: var(--accent-deep);
-}
-
-.badge-paid {
-  background: var(--success-soft);
-  color: var(--success);
-}
-
-.badge-overdue {
+.badge-partly_paid {
   background: var(--warn-soft);
   color: var(--warn);
 }
 
-.badge-cancelled {
+.badge-fully_paid {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+/* ---------- Row 3-dot action menu ---------- */
+
+.row-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.row-menu-trigger {
+  border: 1px solid transparent;
+}
+
+.row-menu-trigger:hover {
+  border-color: var(--line);
+}
+
+.row-menu-dropdown {
+  position: fixed;
+  width: 224px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+  z-index: 1000;
+  display: grid;
+  gap: 2px;
+  animation: rise 0.18s ease both;
+}
+
+.row-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-family: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.row-menu-item:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.row-menu-item:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.row-menu-item span[aria-hidden] {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.row-menu-item:hover:not(:disabled) span[aria-hidden] {
+  color: var(--accent);
+}
+
+.row-menu-danger {
+  color: var(--danger);
+}
+
+.row-menu-danger span[aria-hidden] {
+  color: var(--danger);
+}
+
+.row-menu-danger:hover:not(:disabled) {
   background: var(--danger-soft);
   color: var(--danger);
+}
+
+.row-menu-sep {
+  height: 1px;
+  background: var(--line);
+  margin: 4px 6px;
+}
+
+.row-menu-label {
+  padding: 6px 10px 2px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.row-menu-check {
+  width: 16px;
+  display: inline-flex;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--accent);
 }
 
 .form-page {

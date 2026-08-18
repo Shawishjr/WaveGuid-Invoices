@@ -1,16 +1,14 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatDate, formatMoney } from "@/lib/invoices";
+import { formatDate, formatMoney, invoiceStatuses, STATUS_LABELS, type InvoiceStatus } from "@/lib/invoices";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
 
-const STATUSES = ["draft", "sent", "paid", "overdue", "cancelled"] as const;
-
-type InvoiceStatus = (typeof STATUSES)[number];
+const STATUSES = invoiceStatuses;
 
 function formatStatusLabel(status: InvoiceStatus) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  return STATUS_LABELS[status];
 }
 
 export default async function ReportsPage() {
@@ -19,11 +17,11 @@ export default async function ReportsPage() {
     prisma.invoice.groupBy({
       by: ["status"],
       _count: { status: true },
-      _sum: { total: true },
+      _sum: { total: true, paidAmount: true },
     }),
     prisma.invoice.findMany({
       include: { client: true },
-      where: { status: { in: ["sent", "overdue"] } },
+      where: { status: "partly_paid" },
       orderBy: { dueDate: "asc" },
       take: 8,
     }),
@@ -43,8 +41,17 @@ export default async function ReportsPage() {
 
   const totalInvoices = statusGroups.reduce((sum, group) => sum + group._count.status, 0);
   const totalRevenue = statusGroups.reduce((sum, group) => sum + (group._sum.total ?? 0), 0);
-  const outstandingAmount = stats.sent.total + stats.overdue.total;
-  const paidCount = stats.paid.count;
+  const outstandingAmount = Math.max(
+    0,
+    statusGroups
+      .filter((g) => g.status === "partly_paid")
+      .reduce(
+        (sum, g) =>
+          sum + Math.max(0, (g._sum.total ?? 0) - (g._sum.paidAmount ?? 0)),
+        0
+      )
+  );
+  const paidCount = stats.fully_paid.count;
   const collectionRate = totalInvoices ? Math.round((paidCount / totalInvoices) * 100) : 0;
 
   return (
@@ -86,22 +93,22 @@ export default async function ReportsPage() {
           <div className="analytics-card">
             <h4>Collection rate</h4>
             <strong>{collectionRate}%</strong>
-            <span>{paidCount} paid invoices</span>
+            <span>{paidCount} fully paid invoices</span>
           </div>
           <div className="analytics-card">
-            <h4>Overdue</h4>
-            <strong>{stats.overdue.count}</strong>
-            <span>{formatMoney(stats.overdue.total)}</span>
+            <h4>Outstanding</h4>
+            <strong>{formatMoney(outstandingAmount)}</strong>
+            <span>Awaiting full payment</span>
           </div>
           <div className="analytics-card">
-            <h4>Pending follow-up</h4>
-            <strong>{stats.sent.count + stats.overdue.count}</strong>
-            <span>Invoices awaiting action</span>
+            <h4>Partly paid</h4>
+            <strong>{stats.partly_paid.count}</strong>
+            <span>{formatMoney(stats.partly_paid.total)}</span>
           </div>
           <div className="analytics-card">
             <h4>Drafts</h4>
             <strong>{stats.draft.count}</strong>
-            <span>Ready to send</span>
+            <span>{formatMoney(stats.draft.total)}</span>
           </div>
         </div>
       </section>

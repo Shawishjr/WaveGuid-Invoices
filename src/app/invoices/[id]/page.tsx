@@ -148,7 +148,6 @@ export default async function InvoiceDetailPage({ params }: Props) {
 
       <PaymentManager
         invoiceId={invoice.id}
-        invoiceStatus={invoice.status}
         currency={invoice.currency}
         total={invoice.total}
         paidAmount={invoice.paidAmount}

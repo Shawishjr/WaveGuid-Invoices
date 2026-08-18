@@ -4,13 +4,17 @@ export const VAT_RATE = 17;
 
 export const invoiceStatuses = [
   "draft",
-  "sent",
-  "paid",
-  "overdue",
-  "cancelled",
+  "partly_paid",
+  "fully_paid",
 ] as const;
 
 export type InvoiceStatus = (typeof invoiceStatuses)[number];
+
+export const STATUS_LABELS: Record<InvoiceStatus, string> = {
+  draft: "Draft",
+  partly_paid: "Partly paid",
+  fully_paid: "Fully paid",
+};
 
 export const invoiceItemSchema = z.object({
   description: z.string().min(1, "Description is required"),
