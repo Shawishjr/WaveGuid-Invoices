@@ -141,3 +141,11 @@
 
  ✓ Starting...
  ✓ Ready in 7.9s
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.22
+   - Local:        http://localhost:3001
+   - Network:      http://0.0.0.0:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 13.4s
