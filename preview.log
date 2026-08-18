@@ -189,3 +189,128 @@
  GET /api/invoices 200 in 96ms
  POST /api/invoices/cmsot4v3t0002tnc893x2q3cr/payments 400 in 48ms
  POST /api/invoices/cmsot4v3t0002tnc893x2q3cr/payments 400 in 30ms
+[preview] Wed 08/19/2026  0:13:02.98 - starting Next.js dev server 
+[preview] URL: http://localhost:3001 
+[preview] Log:  E:\Project\WAVE\WaveGuid-Invoices\preview.log 
+[preview] (Ctrl+C to stop, then run:  subst W: /D) 
+ 
+
+> waveguid-invoices@0.1.0 dev
+> next dev --hostname 0.0.0.0 --port 3001
+
+   ▲ Next.js 15.5.22
+   - Local:        http://localhost:3001
+   - Network:      http://0.0.0.0:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 17s
+ ○ Compiling /login ...
+ ✓ Compiled /login in 1670ms (687 modules)
+ GET /login 200 in 5505ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 607ms (626 modules)
+ ✓ Compiled / in 444ms (863 modules)
+ GET / 307 in 1054ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 506ms (881 modules)
+ GET /dashboard 200 in 1308ms
+ ○ Compiling /payments ...
+ ✓ Compiled /payments in 787ms (913 modules)
+ GET /payments 200 in 1082ms
+ ○ Compiling /invoices ...
+ ✓ Compiled /invoices in 1655ms (921 modules)
+ GET /invoices 200 in 2021ms
+ ○ Compiling /invoices/[id]/edit ...
+ ✓ Compiled /invoices/[id]/edit in 981ms (929 modules)
+ GET /invoices/cmsot4v3t0002tnc893x2q3cr/edit 200 in 2789ms
+ ○ Compiling /api/invoices/[id] ...
+ ✓ Compiled /api/invoices/[id] in 936ms (943 modules)
+ PUT /api/invoices/cmsot4v3t0002tnc893x2q3cr 200 in 2450ms
+ ○ Compiling /invoices/[id] ...
+ ✓ Compiled /invoices/[id] in 765ms (954 modules)
+ GET /invoices/cmsot4v3t0002tnc893x2q3cr 200 in 2465ms
+ GET /invoices/cmsot4v3t0002tnc893x2q3cr 200 in 108ms
+ GET /payments 200 in 88ms
+ GET /dashboard 200 in 154ms
+ GET /payments 200 in 87ms
+ GET /dashboard 200 in 123ms
+ ○ Compiling /invoices/new ...
+ ✓ Compiled /invoices/new in 722ms (954 modules)
+ GET /invoices/new 200 in 1124ms
+ ○ Compiling /currency-rate ...
+ ✓ Compiled /currency-rate in 848ms (963 modules)
+ GET /currency-rate 200 in 1226ms
+ GET /payments 200 in 127ms
+ GET /dashboard 200 in 182ms
+ GET /invoices/new 200 in 105ms
+ ○ Compiling /api/invoices ...
+ ✓ Compiled /api/invoices in 850ms (1012 modules)
+ POST /api/invoices 201 in 5539ms
+ GET /invoices/cmsz5yy3o0006tn4k68ka5zph 200 in 234ms
+ GET /invoices/cmsz5yy3o0006tn4k68ka5zph 200 in 93ms
+ ✓ Compiled /api/invoices/[id]/pdf in 496ms (1014 modules)
+ GET /api/invoices/cmsz5yy3o0006tn4k68ka5zph/pdf 200 in 4710ms
+ ○ Compiling /api/invoices/[id]/payments ...
+ ✓ Compiled /api/invoices/[id]/payments in 527ms (1012 modules)
+ POST /api/invoices/cmsz5yy3o0006tn4k68ka5zph/payments 201 in 1832ms
+ GET /invoices/cmsz5yy3o0006tn4k68ka5zph 200 in 212ms
+ GET /payments 200 in 101ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 635ms (688 modules)
+ GET /dashboard 200 in 1074ms
+ ○ Compiling /reports ...
+ ✓ Compiled /reports in 953ms (941 modules)
+ GET /reports 200 in 1324ms
+ ○ Compiling /clients ...
+ ✓ Compiled /clients in 1004ms (951 modules)
+ GET /clients 200 in 1239ms
+ GET /dashboard 200 in 172ms
+ GET /currency-rate 200 in 95ms
+ GET /currency-rate 200 in 342ms
+ GET /dashboard 200 in 107ms
+ ○ Compiling /invoices ...
+ ✓ Compiled /invoices in 838ms (694 modules)
+ GET /invoices 200 in 1267ms
+ ○ Compiling /api/invoices/[id] ...
+ ✓ Compiled /api/invoices/[id] in 654ms (710 modules)
+ DELETE /api/invoices/cmsz5yy3o0006tn4k68ka5zph 200 in 910ms
+ GET /invoices 200 in 323ms
+ DELETE /api/invoices/cmsot4v3t0002tnc893x2q3cr 200 in 52ms
+ GET /invoices 200 in 107ms
+ DELETE /api/invoices/cmsn8xbld000etnl4ypt6dff5 200 in 49ms
+ GET /invoices 200 in 92ms
+ DELETE /api/invoices/cmsn8jrkw0002tnl4dncmo6qt 200 in 44ms
+ GET /invoices 200 in 97ms
+ GET /invoices 200 in 383ms
+ GET /invoices 200 in 171ms
+ ○ Compiling / ...
+ ✓ Compiled / in 540ms (688 modules)
+ GET / 307 in 1223ms
+ GET /dashboard 200 in 240ms
+ GET /invoices 200 in 98ms
+ ✓ Compiled /api/invoices/[id] in 436ms (704 modules)
+ DELETE /api/invoices/cmsn6yydj0009tnr0b8p0crkp 200 in 718ms
+ GET /invoices 200 in 276ms
+ DELETE /api/invoices/cmsn6cnl90002tnr0fi8uzw6l 200 in 51ms
+ GET /invoices 200 in 82ms
+ ○ Compiling /clients ...
+ ✓ Compiled /clients in 585ms (711 modules)
+ GET /clients 200 in 897ms
+ ○ Compiling /api/clients/[id] ...
+ ✓ Compiled /api/clients/[id] in 597ms (967 modules)
+ DELETE /api/clients/cmsn6cnks0000tnr087vbnagc 200 in 1865ms
+ DELETE /api/clients/cmsn6cnks0000tnr087vbnagc 404 in 45ms
+ GET /clients 200 in 236ms
+ DELETE /api/clients/cmsn8jrkl0000tnl4l2k12aq0 200 in 44ms
+ GET /clients 200 in 63ms
+ DELETE /api/clients/cmslzt7h30005tnp439z4jfo8 200 in 52ms
+ GET /clients 200 in 82ms
+ DELETE /api/clients/cmslzt7h90006tnp4vuhc8rsf 200 in 47ms
+ GET /clients 200 in 71ms
+ DELETE /api/clients/cmsn6yydb0007tnr0u234ovtm 200 in 49ms
+ GET /clients 200 in 73ms
+ DELETE /api/clients/cmsot4v3g0000tnc8whomd2u0 200 in 52ms
+ GET /clients 200 in 74ms
+ GET /invoices 200 in 91ms
+ GET /dashboard 200 in 132ms
