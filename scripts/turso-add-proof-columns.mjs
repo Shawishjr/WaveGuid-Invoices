@@ -10,8 +10,9 @@ async function main() {
   const columns = ["proofData TEXT", "proofMime TEXT", "proofName TEXT"];
   for (const col of columns) {
     const name = col.split(" ")[0];
+    const type = col.split(" ")[1];
     try {
-      await client.execute(`ALTER TABLE "Payment" ADD COLUMN "${col}"`);
+      await client.execute(`ALTER TABLE "Payment" ADD COLUMN "${name}" ${type}`);
       console.log(`added column: ${name}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
