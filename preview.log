@@ -121,3 +121,15 @@
  ○ Compiling /middleware ...
  ✓ Compiled /middleware in 1027ms (623 modules)
  GET /login?callbackUrl=%2FWAVELOGO.svg 200 in 376ms
+ ✓ Compiled in 912ms (408 modules)
+ ✓ Compiled in 152ms (226 modules)
+ ✓ Compiled in 12.2s (240 modules)
+ ✓ Compiled in 211ms (240 modules)
+ ✓ Compiled /login in 357ms (624 modules)
+ GET /login?callbackUrl=%2Fdashboard 200 in 1779ms
+ GET /login?callbackUrl=%2Fdashboard 200 in 102ms
+ ✓ Compiled /api/auth/login in 483ms (866 modules)
+ POST /api/auth/login 307 in 1036ms
+ ✓ Compiled /dashboard in 393ms (884 modules)
+ POST /dashboard 200 in 1115ms
+ GET /dashboard 200 in 190ms

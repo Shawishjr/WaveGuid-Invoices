@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LogoutButton } from "./LogoutButton";
 
 export default function AppShell({
   children,
@@ -127,6 +128,7 @@ export default function AppShell({
               <span>New invoice</span>
             </Link>
           </nav>
+          <LogoutButton />
         </aside>
       )}
       <div className="main-panel">
