@@ -149,3 +149,43 @@
 
  ✓ Starting...
  ✓ Ready in 13.4s
+[?25h
+[preview] Tue 08/18/2026 18:34:25.44 - starting Next.js dev server 
+[preview] URL: http://localhost:3001 
+[preview] Log:  E:\Project\WAVE\WaveGuid-Invoices\preview.log 
+[preview] (Ctrl+C to stop, then run:  subst W: /D) 
+ 
+
+> waveguid-invoices@0.1.0 dev
+> next dev --hostname 0.0.0.0 --port 3001
+
+   ▲ Next.js 15.5.22
+   - Local:        http://localhost:3001
+   - Network:      http://0.0.0.0:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 3.5s
+ ○ Compiling /login ...
+ ✓ Compiled /login in 10.9s (701 modules)
+ GET /login 200 in 13407ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 576ms (704 modules)
+ POST /api/auth/login 307 in 1044ms
+ ✓ Compiled /middleware in 466ms (642 modules)
+ ○ Compiling /payments ...
+ ✓ Compiled /payments in 1126ms (901 modules)
+ GET /payments 200 in 1623ms
+ ○ Compiling /api/invoices ...
+ ✓ Compiled /api/invoices in 1082ms (969 modules)
+ GET /api/invoices 200 in 1735ms
+ ✓ Compiled /api/invoices/[id]/payments in 350ms (972 modules)
+ POST /api/invoices/cmsot4v3t0002tnc893x2q3cr/payments 201 in 1634ms
+ ✓ Compiled /api/payments/[id]/proof in 427ms (974 modules)
+ GET /api/payments/cmsytqu5a0001tnyst8oqouv1/proof 200 in 1758ms
+ ✓ Compiled /api/payments/[id] in 421ms (976 modules)
+ DELETE /api/payments/cmsytqu5a0001tnyst8oqouv1 200 in 1643ms
+ POST /api/auth/login 307 in 200ms
+ GET /api/invoices 200 in 96ms
+ POST /api/invoices/cmsot4v3t0002tnc893x2q3cr/payments 400 in 48ms
+ POST /api/invoices/cmsot4v3t0002tnc893x2q3cr/payments 400 in 30ms
